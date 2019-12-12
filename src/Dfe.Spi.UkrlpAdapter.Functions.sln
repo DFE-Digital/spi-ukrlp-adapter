@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.UkrlpAdapter.Functions", "Dfe.Spi.UkrlpAdapter.Functions\Dfe.Spi.UkrlpAdapter.Functions.csproj", "{E056420D-91CA-4063-AE32-54A36C6FA5F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.UkrlpAdapter.Domain", "Dfe.Spi.UkrlpAdapter.Domain\Dfe.Spi.UkrlpAdapter.Domain.csproj", "{FC0BCA4D-5680-4E6A-9DFE-18236F985755}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E056420D-91CA-4063-AE32-54A36C6FA5F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E056420D-91CA-4063-AE32-54A36C6FA5F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E056420D-91CA-4063-AE32-54A36C6FA5F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E056420D-91CA-4063-AE32-54A36C6FA5F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC0BCA4D-5680-4E6A-9DFE-18236F985755}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC0BCA4D-5680-4E6A-9DFE-18236F985755}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC0BCA4D-5680-4E6A-9DFE-18236F985755}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC0BCA4D-5680-4E6A-9DFE-18236F985755}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
