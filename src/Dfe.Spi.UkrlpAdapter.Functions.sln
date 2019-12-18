@@ -20,6 +20,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.UkrlpAdapter.Functi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests", "Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests\Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests.csproj", "{74AA5183-ECB4-425F-8E55-6A9FB206D738}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deploy", "Deploy", "{51B9FBD4-CD29-47C6-990C-36911222CAC4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{E9DC6236-1A3E-4E9E-AB89-52E17AD4AC71}"
+ProjectSection(SolutionItems) = preProject
+	..\pipelines\build.yml = ..\pipelines\build.yml
+EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Release", "Release", "{1BC75CD7-FB9C-44F6-889D-4F6F06D632A3}"
+ProjectSection(SolutionItems) = preProject
+	..\azure\template.json = ..\azure\template.json
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -68,5 +80,7 @@ Global
 		{F82422CD-ED5F-48FE-B3B3-8E71F4738A25} = {218E79C1-3D41-493C-8B11-E8CD636F2FC4}
 		{3A0EF77B-45BF-4ABD-8F2C-710ED85B7FB8} = {218E79C1-3D41-493C-8B11-E8CD636F2FC4}
 		{74AA5183-ECB4-425F-8E55-6A9FB206D738} = {218E79C1-3D41-493C-8B11-E8CD636F2FC4}
+		{E9DC6236-1A3E-4E9E-AB89-52E17AD4AC71} = {51B9FBD4-CD29-47C6-990C-36911222CAC4}
+		{1BC75CD7-FB9C-44F6-889D-4F6F06D632A3} = {51B9FBD4-CD29-47C6-990C-36911222CAC4}
 	EndGlobalSection
 EndGlobal
