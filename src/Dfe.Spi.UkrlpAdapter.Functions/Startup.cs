@@ -13,6 +13,7 @@ using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RestSharp;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace Dfe.Spi.UkrlpAdapter.Functions
@@ -28,6 +29,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
 
             LoadAndAddConfiguration(services);
             AddLogging(services);
+            AddHttp(services);
             AddUkrlpApi(services);
             AddMapping(services);
             AddManagers(services);
@@ -55,6 +57,11 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
             services.AddScoped<ILogger>(provider =>
                 provider.GetService<ILoggerFactory>().CreateLogger(LogCategories.CreateFunctionUserCategory("Common")));
             services.AddScoped<ILoggerWrapper, LoggerWrapper>();
+        }
+
+        private void AddHttp(IServiceCollection services)
+        {
+            services.AddScoped<IRestClient, RestClient>();
         }
 
         private void AddUkrlpApi(IServiceCollection services)
