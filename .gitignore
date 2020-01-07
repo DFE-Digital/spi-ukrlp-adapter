@@ -60,6 +60,7 @@ BenchmarkDotNet.Artifacts/
 project.lock.json
 project.fragment.lock.json
 artifacts/
+**/Properties/launchSettings.json
 
 # StyleCop
 StyleCopReport.xml
@@ -268,6 +269,10 @@ ServiceFabricBackup/
 # Microsoft Fakes
 FakesAssemblies/
 
+# JetBrains Rider
+.idea/
+*.sln.iml
+
 # GhostDoc plugin setting file
 *.GhostDoc.xml
 
@@ -348,3 +353,6 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# Mac OS
+.DS_Store
