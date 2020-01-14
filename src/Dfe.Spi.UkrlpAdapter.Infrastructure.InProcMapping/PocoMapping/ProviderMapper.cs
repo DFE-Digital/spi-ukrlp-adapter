@@ -24,6 +24,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping
             var learningProvider = new LearningProvider
             {
                 Name = provider.ProviderName,
+                LegalName = provider.ProviderName,
                 Ukprn = provider.UnitedKingdomProviderReferenceNumber,
                 Postcode = provider.Postcode,
             };

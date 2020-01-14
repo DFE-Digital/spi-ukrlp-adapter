@@ -33,6 +33,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.UnitTests.PocoMappin
             Assert.AreEqual(source.ProviderName, actual.Name);
             Assert.AreEqual(source.UnitedKingdomProviderReferenceNumber, actual.Ukprn);
             Assert.AreEqual(source.Postcode, actual.Postcode);
+            Assert.AreEqual(source.ProviderName, actual.LegalName);
         }
 
         [Test]
