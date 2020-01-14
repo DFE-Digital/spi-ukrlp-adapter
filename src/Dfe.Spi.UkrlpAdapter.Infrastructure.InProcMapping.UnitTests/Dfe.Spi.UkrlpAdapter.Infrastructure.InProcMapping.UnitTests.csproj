@@ -9,7 +9,7 @@
     <ItemGroup>
         <PackageReference Include="AutoFixture" Version="4.11.0" />
         <PackageReference Include="AutoFixture.NUnit3" Version="4.11.0" />
-        <PackageReference Include="Dfe.Spi.Models" Version="1.0.2" />
+        <PackageReference Include="Dfe.Spi.Models" Version="1.0.5" />
         <PackageReference Include="nunit" Version="3.11.0" />
         <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />

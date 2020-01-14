@@ -31,6 +31,8 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.UnitTests.PocoMappin
 
             Assert.IsNotNull(actual);
             Assert.AreEqual(source.ProviderName, actual.Name);
+            Assert.AreEqual(source.UnitedKingdomProviderReferenceNumber, actual.Ukprn);
+            Assert.AreEqual(source.Postcode, actual.Postcode);
         }
 
         [Test]

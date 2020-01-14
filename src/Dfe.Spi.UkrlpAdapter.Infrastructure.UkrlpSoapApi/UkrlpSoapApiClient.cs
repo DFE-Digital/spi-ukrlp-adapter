@@ -44,11 +44,21 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
                 return null;
             }
 
-            return new Provider
+            var provider = new Provider
             {
                 UnitedKingdomProviderReferenceNumber = ukprn,
                 ProviderName = match.GetElementByLocalName("ProviderName").Value,
             };
+
+            var legalContactElement = match.GetElementsByLocalName("ProviderContact")
+                .FirstOrDefault(contactElement => contactElement.GetElementByLocalName("ContactType")?.Value == "L");
+            if (legalContactElement != null)
+            {
+                provider.Postcode = legalContactElement.GetElementByLocalName("ContactAddress")
+                    ?.GetElementByLocalName("PostCode")?.Value;
+            }
+
+            return provider;
         }
 
         private static XElement EnsureSuccessResponseAndExtractResult(IRestResponse response)

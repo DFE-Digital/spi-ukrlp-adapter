@@ -4,5 +4,6 @@ namespace Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi
     {
         public long UnitedKingdomProviderReferenceNumber { get; set; }
         public string ProviderName { get; set; }
+        public string Postcode { get; set; }
     }
 }
