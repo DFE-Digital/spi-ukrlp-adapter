@@ -1,3 +1,4 @@
+using System;
 using System.Xml.Linq;
 
 namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
@@ -5,6 +6,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
     internal interface IUkrlpSoapMessageBuilder
     {
         string BuildMessageToGetSpecificUkprn(long ukprn);
+        string BuildMessageToGetUpdatesSince(DateTime updatedSince);
     }
 
     internal class UkrlpSoapMessageBuilder : IUkrlpSoapMessageBuilder
@@ -26,6 +28,18 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
             var selectionCriteria = new XElement("SelectionCriteria",
                 new XElement("UnitedKingdomProviderReferenceNumberList",
                     new XElement("UnitedKingdomProviderReferenceNumber", ukprn)),
+                new XElement("CriteriaCondition", "OR"),
+                new XElement("ApprovedProvidersOnly", "No"),
+                new XElement("ProviderStatus", "A"));
+            
+            var envelope = BuildEnvelope(selectionCriteria);
+            return envelope.ToString();
+        }
+
+        public string BuildMessageToGetUpdatesSince(DateTime updatedSince)
+        {
+            var selectionCriteria = new XElement("SelectionCriteria",
+                new XElement("ProviderUpdatedSince", updatedSince.ToUniversalTime().ToString("O")),
                 new XElement("CriteriaCondition", "OR"),
                 new XElement("ApprovedProvidersOnly", "No"),
                 new XElement("ProviderStatus", "A"));
