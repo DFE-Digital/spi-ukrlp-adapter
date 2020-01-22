@@ -32,6 +32,8 @@ ProjectSection(SolutionItems) = preProject
 	..\azure\template.json = ..\azure\template.json
 EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage", "Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage\Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.csproj", "{8E90C452-ADB9-4481-BEDD-22F0E21E2E9D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -74,6 +76,10 @@ Global
 		{74AA5183-ECB4-425F-8E55-6A9FB206D738}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74AA5183-ECB4-425F-8E55-6A9FB206D738}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{74AA5183-ECB4-425F-8E55-6A9FB206D738}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E90C452-ADB9-4481-BEDD-22F0E21E2E9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E90C452-ADB9-4481-BEDD-22F0E21E2E9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E90C452-ADB9-4481-BEDD-22F0E21E2E9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E90C452-ADB9-4481-BEDD-22F0E21E2E9D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{71839C5E-C830-4DF7-B18C-A2E58EB188DC} = {218E79C1-3D41-493C-8B11-E8CD636F2FC4}
