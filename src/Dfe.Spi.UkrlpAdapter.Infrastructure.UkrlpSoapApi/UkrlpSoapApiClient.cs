@@ -38,29 +38,26 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
             var result = EnsureSuccessResponseAndExtractResult(response);
 
-            var match = result.GetElementByLocalName("MatchingProviderRecords");
-            if (match == null)
-            {
-                return null;
-            }
-
-            var provider = new Provider
-            {
-                UnitedKingdomProviderReferenceNumber = ukprn,
-                ProviderName = match.GetElementByLocalName("ProviderName").Value,
-            };
-
-            var legalContactElement = match.GetElementsByLocalName("ProviderContact")
-                .FirstOrDefault(contactElement => contactElement.GetElementByLocalName("ContactType")?.Value == "L");
-            if (legalContactElement != null)
-            {
-                provider.Postcode = legalContactElement.GetElementByLocalName("ContactAddress")
-                    ?.GetElementByLocalName("PostCode")?.Value;
-            }
-
-            return provider;
+            var provider = MapProvidersFromSoapResult(result);
+            return provider.FirstOrDefault();
         }
 
+        public async Task<Provider[]> GetProvidersUpdatedSinceAsync(DateTime updatedSince, CancellationToken cancellationToken)
+        {
+            var message = _messageBuilder.BuildMessageToGetUpdatesSince(updatedSince);
+
+            var request = new RestRequest(Method.POST);
+            request.AddParameter("text/xml", message, ParameterType.RequestBody);
+            request.AddHeader("SOAPAction", "retrieveAllProviders");
+
+            var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
+            var result = EnsureSuccessResponseAndExtractResult(response);
+
+            return MapProvidersFromSoapResult(result);
+        }
+
+        
+        
         private static XElement EnsureSuccessResponseAndExtractResult(IRestResponse response)
         {
             XDocument document;
@@ -85,6 +82,33 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
             }
 
             return body.Elements().First();
+        }
+
+        private static Provider[] MapProvidersFromSoapResult(XElement result)
+        {
+            var matches = result.GetElementsByLocalName("MatchingProviderRecords");
+            var providers = new Provider[matches.Length];
+
+            for (var i = 0; i < matches.Length; i++)
+            {
+                var match = matches[i];
+                
+                providers[i] = new Provider
+                {
+                    UnitedKingdomProviderReferenceNumber = long.Parse(match.GetElementByLocalName("UnitedKingdomProviderReferenceNumber").Value),
+                    ProviderName = match.GetElementByLocalName("ProviderName").Value,
+                };
+
+                var legalContactElement = match.GetElementsByLocalName("ProviderContact")
+                    .FirstOrDefault(contactElement => contactElement.GetElementByLocalName("ContactType")?.Value == "L");
+                if (legalContactElement != null)
+                {
+                    providers[i].Postcode = legalContactElement.GetElementByLocalName("ContactAddress")
+                        ?.GetElementByLocalName("PostCode")?.Value;
+                }
+            }
+
+            return providers;
         }
     }
 }
