@@ -34,6 +34,11 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
                 throw new ArgumentException($"id must be a number (ukprn) but received {id}", nameof(id));
             }
 
+            if (id.Length != 8)
+            {
+                throw new ArgumentException($"UKPRN must be 8 digits but received {id.Length} ({id})");
+            }
+
             var provider = await _ukrlpApiClient.GetProviderAsync(ukprn, cancellationToken);
             if (provider == null)
             {
