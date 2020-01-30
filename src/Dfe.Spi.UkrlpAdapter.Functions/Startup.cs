@@ -1,12 +1,17 @@
 using System.IO;
 using Dfe.Spi.Common.Logging;
 using Dfe.Spi.Common.Logging.Definitions;
+using Dfe.Spi.UkrlpAdapter.Application.Cache;
 using Dfe.Spi.UkrlpAdapter.Application.LearningProviders;
+using Dfe.Spi.UkrlpAdapter.Domain.Cache;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
+using Dfe.Spi.UkrlpAdapter.Domain.Events;
 using Dfe.Spi.UkrlpAdapter.Domain.Mapping;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
 using Dfe.Spi.UkrlpAdapter.Functions;
+using Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache;
 using Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping;
+using Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware;
 using Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.WebJobs.Logging;
@@ -30,8 +35,10 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
             LoadAndAddConfiguration(services);
             AddLogging(services);
             AddHttp(services);
+            AddEventPublishing(services);
             AddUkrlpApi(services);
             AddMapping(services);
+            AddCache(services);
             AddManagers(services);
         }
 
@@ -48,6 +55,8 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
             _rawConfiguration.Bind(_configuration);
             services.AddSingleton(_configuration);
             services.AddSingleton(_configuration.UkrlpApi);
+            services.AddSingleton(_configuration.Cache);
+            services.AddSingleton(_configuration.Middleware);
         }
         
         private void AddLogging(IServiceCollection services)
@@ -61,7 +70,12 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
 
         private void AddHttp(IServiceCollection services)
         {
-            services.AddScoped<IRestClient, RestClient>();
+            services.AddTransient<IRestClient, RestClient>();
+        }
+
+        private void AddEventPublishing(IServiceCollection services)
+        {
+            services.AddScoped<IEventPublisher, MiddlewareEventPublisher>();
         }
 
         private void AddUkrlpApi(IServiceCollection services)
@@ -74,9 +88,17 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
             services.AddScoped<IMapper, PocoMapper>();
         }
 
+        private void AddCache(IServiceCollection services)
+        {
+            services.AddScoped<IStateRepository, TableStateRepository>();
+            services.AddScoped<IProviderRepository, TableProviderRepository>();
+            services.AddScoped<IProviderProcessingQueue, QueueProviderProcessingQueue>();
+        }
+
         private void AddManagers(IServiceCollection services)
         {
             services.AddScoped<ILearningProviderManager, LearningProviderManager>();
+            services.AddScoped<ICacheManager, CacheManager>();
         }
     }
 }

@@ -4,9 +4,10 @@
         <AzureFunctionsVersion></AzureFunctionsVersion>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Dfe.Spi.Common.Logging" Version="1.0.7" />
+        <PackageReference Include="Dfe.Spi.Common.Logging" Version="1.0.9" />
         <PackageReference Include="Dfe.Spi.Models" Version="1.0.6" />
         <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
+        <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="3.0.0" />
         <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.29" />
     </ItemGroup>
     <ItemGroup>
@@ -21,7 +22,9 @@
     <ItemGroup>
       <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Application\Dfe.Spi.UkrlpAdapter.Application.csproj" />
       <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Domain\Dfe.Spi.UkrlpAdapter.Domain.csproj" />
+      <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage\Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.csproj" />
       <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping\Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.csproj" />
+      <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware.csproj" />
       <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi\Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.csproj" />
     </ItemGroup>
 </Project>
