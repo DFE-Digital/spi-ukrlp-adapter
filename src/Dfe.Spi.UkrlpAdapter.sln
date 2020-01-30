@@ -36,6 +36,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.UkrlpAdapter.Infras
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware", "Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware.csproj", "{0FC38DCD-D74B-4CAF-BAE0-BEAA3702C945}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware.UnitTests", "Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware.UnitTests\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware.UnitTests.csproj", "{E1BE7439-69FE-4E84-B9AD-9D7F1C623304}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,6 +88,10 @@ Global
 		{0FC38DCD-D74B-4CAF-BAE0-BEAA3702C945}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0FC38DCD-D74B-4CAF-BAE0-BEAA3702C945}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0FC38DCD-D74B-4CAF-BAE0-BEAA3702C945}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1BE7439-69FE-4E84-B9AD-9D7F1C623304}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1BE7439-69FE-4E84-B9AD-9D7F1C623304}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1BE7439-69FE-4E84-B9AD-9D7F1C623304}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1BE7439-69FE-4E84-B9AD-9D7F1C623304}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{71839C5E-C830-4DF7-B18C-A2E58EB188DC} = {218E79C1-3D41-493C-8B11-E8CD636F2FC4}
@@ -94,5 +100,6 @@ Global
 		{74AA5183-ECB4-425F-8E55-6A9FB206D738} = {218E79C1-3D41-493C-8B11-E8CD636F2FC4}
 		{E9DC6236-1A3E-4E9E-AB89-52E17AD4AC71} = {51B9FBD4-CD29-47C6-990C-36911222CAC4}
 		{1BC75CD7-FB9C-44F6-889D-4F6F06D632A3} = {51B9FBD4-CD29-47C6-990C-36911222CAC4}
+		{E1BE7439-69FE-4E84-B9AD-9D7F1C623304} = {218E79C1-3D41-493C-8B11-E8CD636F2FC4}
 	EndGlobalSection
 EndGlobal
