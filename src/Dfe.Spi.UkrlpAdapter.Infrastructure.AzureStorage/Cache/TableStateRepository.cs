@@ -25,6 +25,8 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
 
         public async Task<DateTime> GetLastProviderReadTimeAsync(CancellationToken cancellationToken)
         {
+            await _table.CreateIfNotExistsAsync(cancellationToken);
+            
             var operation = TableOperation.Retrieve<LastReadEntity>("learning-provider", "last-read");
             var operationResult = await _table.ExecuteAsync(operation, cancellationToken);
             var entity = (LastReadEntity) operationResult.Result;

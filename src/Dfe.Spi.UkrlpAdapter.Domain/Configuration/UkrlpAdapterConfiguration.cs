@@ -4,5 +4,6 @@ namespace Dfe.Spi.UkrlpAdapter.Domain.Configuration
     {
         public UkrlpApiConfiguration UkrlpApi { get; set; }
         public CacheConfiguration Cache { get; set; }
+        public MiddlewareConfiguration Middleware { get; set; }
     }
 }

@@ -14,7 +14,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
         
         public QueueProviderProcessingQueue(CacheConfiguration configuration)
         {
-            var storageAccount = CloudStorageAccount.Parse(configuration.ProviderTableName);
+            var storageAccount = CloudStorageAccount.Parse(configuration.ProviderProcessingQueueConnectionString);
             var queueClient = storageAccount.CreateCloudQueueClient();
             _queue = queueClient.GetQueueReference(CacheQueueNames.ProviderProcessingQueue);
         }
