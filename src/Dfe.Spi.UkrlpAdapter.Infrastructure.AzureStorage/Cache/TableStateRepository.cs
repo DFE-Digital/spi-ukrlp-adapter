@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.UkrlpAdapter.Domain.Cache;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
-using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
 using Microsoft.Azure.Cosmos.Table;
 
 namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
