@@ -7,11 +7,13 @@ using Dfe.Spi.UkrlpAdapter.Domain.Cache;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
 using Dfe.Spi.UkrlpAdapter.Domain.Events;
 using Dfe.Spi.UkrlpAdapter.Domain.Mapping;
+using Dfe.Spi.UkrlpAdapter.Domain.Translation;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
 using Dfe.Spi.UkrlpAdapter.Functions;
 using Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache;
 using Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping;
 using Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware;
+using Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator;
 using Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.WebJobs.Logging;
@@ -36,6 +38,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
             AddLogging(services);
             AddHttp(services);
             AddEventPublishing(services);
+            AddTranslation(services);
             AddUkrlpApi(services);
             AddMapping(services);
             AddCache(services);
@@ -57,6 +60,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
             services.AddSingleton(_configuration.UkrlpApi);
             services.AddSingleton(_configuration.Cache);
             services.AddSingleton(_configuration.Middleware);
+            services.AddSingleton(_configuration.Translator);
         }
         
         private void AddLogging(IServiceCollection services)
@@ -76,6 +80,11 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
         private void AddEventPublishing(IServiceCollection services)
         {
             services.AddScoped<IEventPublisher, MiddlewareEventPublisher>();
+        }
+
+        private void AddTranslation(IServiceCollection services)
+        {
+            services.AddScoped<ITranslator, TranslatorApiClient>();
         }
 
         private void AddUkrlpApi(IServiceCollection services)

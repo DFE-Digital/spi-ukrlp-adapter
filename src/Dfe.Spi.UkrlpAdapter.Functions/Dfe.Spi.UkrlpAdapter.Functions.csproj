@@ -25,6 +25,7 @@
       <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage\Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.csproj" />
       <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping\Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.csproj" />
       <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware.csproj" />
+      <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator.csproj" />
       <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi\Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.csproj" />
     </ItemGroup>
 </Project>

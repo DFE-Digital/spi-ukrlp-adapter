@@ -2,32 +2,48 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.Models;
+using Dfe.Spi.UkrlpAdapter.Domain.Translation;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
 using Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping;
+using Moq;
 using NUnit.Framework;
 
 namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.UnitTests.PocoMapping
 {
     public class WhenMappingProviderToLearningProvider
     {
+        private Mock<ITranslator> _translatorMock;
+        private ProviderMapper _mapper;
+        private CancellationToken _cancellationToken;
+
+        [SetUp]
+        public void Arrange()
+        {
+            _translatorMock = new Mock<ITranslator>();
+            _translatorMock.Setup(t =>
+                    t.TranslateEnumValue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync("something");
+            
+            _mapper = new ProviderMapper(_translatorMock.Object);
+            
+            _cancellationToken = new CancellationToken();
+        }
+        
         [Test, AutoData]
         public async Task ThenItShouldReturnLearningProvider(Provider source)
         {
-            var mapper = new ProviderMapper();
-
-            var actual = await mapper.MapAsync<LearningProvider>(source, new CancellationToken());
+            var actual = await _mapper.MapAsync<LearningProvider>(source, _cancellationToken);
 
             Assert.IsNotNull(actual);
             Assert.IsInstanceOf<LearningProvider>(actual);
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldMapEstablishmentToLearningProvider(Provider source)
+        public async Task ThenItShouldMapProviderToLearningProvider(Provider source)
         {
-            var mapper = new ProviderMapper();
-
-            var actual = await mapper.MapAsync<LearningProvider>(source, new CancellationToken()) as LearningProvider;
+            var actual = await _mapper.MapAsync<LearningProvider>(source, _cancellationToken) as LearningProvider;
 
             Assert.IsNotNull(actual);
             Assert.AreEqual(source.ProviderName, actual.Name);
@@ -36,22 +52,33 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.UnitTests.PocoMappin
             Assert.AreEqual(source.ProviderName, actual.LegalName);
         }
 
-        [Test]
-        public void ThenItShouldThrowExceptionIfSourceIsNotEstablishment()
+        [Test, AutoData]
+        public async Task ThenItShouldMapStatusFromTranslatedProviderValue(Provider source, string translatedValue)
         {
-            var mapper = new ProviderMapper();
+            _translatorMock.Setup(t =>
+                    t.TranslateEnumValue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(translatedValue);
+            
+            var actual = await _mapper.MapAsync<LearningProvider>(source, _cancellationToken) as LearningProvider;
 
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(translatedValue, actual.Status);
+            _translatorMock.Verify(t=>t.TranslateEnumValue(EnumerationNames.ProviderStatus, source.ProviderStatus, _cancellationToken),
+                Times.Once);
+        }
+
+        [Test]
+        public void ThenItShouldThrowExceptionIfSourceIsNotProvider()
+        {
             Assert.ThrowsAsync<ArgumentException>(async () =>
-                await mapper.MapAsync<LearningProvider>(new object(), new CancellationToken()));
+                await _mapper.MapAsync<LearningProvider>(new object(), _cancellationToken));
         }
 
         [Test]
         public void ThenItShouldThrowExceptionIfDestinationIsNotLearningProvider()
         {
-            var mapper = new ProviderMapper();
-
             Assert.ThrowsAsync<ArgumentException>(async () =>
-                await mapper.MapAsync<object>(new Provider(), new CancellationToken()));
+                await _mapper.MapAsync<object>(new Provider(), _cancellationToken));
         }
     }
 }
