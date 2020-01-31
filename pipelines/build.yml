@@ -56,6 +56,14 @@ steps:
       TargetFolder: '$(build.artifactstagingdirectory)/publish'
       OverWrite: true
 
+  - task: CopyFiles@2
+    displayName: 'Copy event definitions'
+    inputs:
+      Contents: |
+        eventing/*
+      TargetFolder: '$(build.artifactstagingdirectory)/publish'
+      OverWrite: true
+
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact'
     inputs:
