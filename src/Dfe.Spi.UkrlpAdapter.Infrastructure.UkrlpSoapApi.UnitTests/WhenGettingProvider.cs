@@ -64,10 +64,11 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldReturnDeserializedProvider(long ukprn, string providerName, string postcode)
+        public async Task ThenItShouldReturnDeserializedProvider(long ukprn, string providerName, string postcode,
+            string status)
         {
             _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(GetValidResponse(ukprn, providerName, postcode));
+                .ReturnsAsync(GetValidResponse(ukprn, providerName, postcode, status));
 
             var actual = await _client.GetProviderAsync(ukprn, new CancellationToken());
 
@@ -75,6 +76,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
             Assert.AreEqual(ukprn, actual.UnitedKingdomProviderReferenceNumber);
             Assert.AreEqual(providerName, actual.ProviderName);
             Assert.AreEqual(postcode, actual.Postcode);
+            Assert.AreEqual(status, actual.ProviderStatus);
         }
 
         [Test, AutoData]
@@ -103,7 +105,8 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
 
         private XNamespace soapNs = "http://schemas.xmlsoap.org/soap/envelope/";
 
-        private IRestResponse GetValidResponse(long ukprn, string establishmentName, string postcode = null)
+        private IRestResponse GetValidResponse(long ukprn, string establishmentName, string postcode = null,
+            string status = null)
         {
             XNamespace ukrlpNs = "http://ukrlp.co.uk.server.ws.v3";
 
@@ -117,6 +120,12 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
                     new XElement("ContactAddress",
                         new XElement("PostCode", postcode))));
             }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                providerElement.Add(new XElement("ProviderStatus", status));
+            }
+
             var envelope = GetSoapEnvelope(new XElement(ukrlpNs + "ProviderQueryResponse",
                 new XAttribute(XNamespace.Xmlns + "ukrlp", ukrlpNs.NamespaceName),
                 providerElement));

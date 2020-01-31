@@ -97,6 +97,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
                 {
                     UnitedKingdomProviderReferenceNumber = long.Parse(match.GetElementByLocalName("UnitedKingdomProviderReferenceNumber").Value),
                     ProviderName = match.GetElementByLocalName("ProviderName").Value,
+                    ProviderStatus = match.GetElementByLocalName("ProviderStatus")?.Value,
                 };
 
                 var legalContactElement = match.GetElementsByLocalName("ProviderContact")

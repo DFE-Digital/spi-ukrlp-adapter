@@ -7,19 +7,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoFixture" Version="4.11.0" />
         <PackageReference Include="AutoFixture.NUnit3" Version="4.11.0" />
-        <PackageReference Include="Dfe.Spi.Common.WellKnownIdentifiers" Version="1.0.0" />
-        <PackageReference Include="Dfe.Spi.Models" Version="1.0.8" />
+        <PackageReference Include="Dfe.Spi.Common.Logging" Version="1.0.9" />
         <PackageReference Include="Moq" Version="4.13.1" />
         <PackageReference Include="nunit" Version="3.11.0" />
         <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+        <PackageReference Include="RestSharp" Version="106.6.10" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Domain\Dfe.Spi.UkrlpAdapter.Domain.csproj" />
-      <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping\Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.csproj" />
+      <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator.csproj" />
     </ItemGroup>
 
 </Project>

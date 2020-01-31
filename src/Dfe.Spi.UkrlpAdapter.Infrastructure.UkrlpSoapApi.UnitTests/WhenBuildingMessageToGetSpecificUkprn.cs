@@ -1,8 +1,6 @@
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Xml.Linq;
 using AutoFixture;
-using AutoFixture.NUnit3;
 using NUnit.Framework;
 
 namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
