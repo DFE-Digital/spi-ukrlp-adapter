@@ -57,6 +57,14 @@ steps:
       OverWrite: true
 
   - task: CopyFiles@2
+    displayName: 'Copy EAPIM files'
+    inputs:
+      Contents: |
+        eapim/*
+      TargetFolder: '$(build.artifactstagingdirectory)/publish'
+      OverWrite: true
+
+  - task: CopyFiles@2
     displayName: 'Copy event definitions'
     inputs:
       Contents: |
