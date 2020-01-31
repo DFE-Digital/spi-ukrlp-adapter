@@ -30,6 +30,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Release", "Release", "{1BC75CD7-FB9C-44F6-889D-4F6F06D632A3}"
 ProjectSection(SolutionItems) = preProject
 	..\azure\template.json = ..\azure\template.json
+	..\eventing\events.json = ..\eventing\events.json
+	..\eventing\UpdatePublishedEvents.ps1 = ..\eventing\UpdatePublishedEvents.ps1
 EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage", "Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage\Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.csproj", "{8E90C452-ADB9-4481-BEDD-22F0E21E2E9D}"
