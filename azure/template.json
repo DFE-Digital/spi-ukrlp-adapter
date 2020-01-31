@@ -38,6 +38,18 @@
     },
     "ukrlpStakeholderId": {
       "type": "securestring"
+    },
+    "middlewareUrl": {
+      "type": "string"
+    },
+    "middlewareFunctionsKey": {
+      "type": "securestring"
+    },
+    "translatorUrl": {
+      "type": "string"
+    },
+    "translatorFunctionsKey": {
+      "type": "securestring"
     }
   },
   "variables": {
@@ -151,6 +163,42 @@
             {
               "name": "SPI_UkrlpApi__StakeholderId",
               "value": "[parameters('ukrlpStakeholderId')]"
+            },
+            {
+              "name": "SPI_Cache__ProviderProcessingQueueConnectionString",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
+            },
+            {
+              "name": "SPI_Cache__ProviderSchedule",
+              "value": "0 0 5 * * *"
+            },
+            {
+              "name": "SPI_Cache__TableStorageConnectionString",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
+            },
+            {
+              "name": "SPI_Cache__ProviderTableName",
+              "value": "providers"
+            },
+            {
+              "name": "SPI_Cache__StateTableName",
+              "value": "status"
+            },
+            {
+              "name": "SPI_Middleware__BaseUrl",
+              "value": "[parameters('middlewareUrl')]"
+            },
+            {
+              "name": "SPI_Middleware__FunctionsKey",
+              "value": "[parameters('middlewareFunctionsKey')]"
+            },
+            {
+              "name": "SPI_Translator__BaseUrl",
+              "value": "[parameters('translatorUrl')]"
+            },
+            {
+              "name": "SPI_Translator__FunctionsKey",
+              "value": "[parameters('translatorFunctionsKey')]"
             }
           ]
         }
