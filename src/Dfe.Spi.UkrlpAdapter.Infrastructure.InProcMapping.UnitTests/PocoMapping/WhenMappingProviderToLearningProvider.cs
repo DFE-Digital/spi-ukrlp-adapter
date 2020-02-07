@@ -41,8 +41,16 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.UnitTests.PocoMappin
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldMapProviderToLearningProvider(Provider source)
+        public async Task ThenItShouldMapProviderToLearningProvider(Provider source, long urn, string dfeNumber, string charityNumber, string companyNumber)
         {
+            source.Verifications = new[]
+            {
+                new VerificationDetails {Authority = "DfE (Schools Unique Reference Number)", Id = urn.ToString()},
+                new VerificationDetails {Authority = "DfE (LEA Code and Establishment Number)", Id = dfeNumber},
+                new VerificationDetails {Authority = "Charity Commission", Id = charityNumber},
+                new VerificationDetails {Authority = "Companies House", Id = companyNumber},
+            };
+            
             var actual = await _mapper.MapAsync<LearningProvider>(source, _cancellationToken) as LearningProvider;
 
             Assert.IsNotNull(actual);
@@ -50,6 +58,10 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.UnitTests.PocoMappin
             Assert.AreEqual(source.UnitedKingdomProviderReferenceNumber, actual.Ukprn);
             Assert.AreEqual(source.Postcode, actual.Postcode);
             Assert.AreEqual(source.ProviderName, actual.LegalName);
+            Assert.AreEqual(urn, actual.Urn);
+            Assert.AreEqual(dfeNumber, actual.DfeNumber);
+            Assert.AreEqual(companyNumber, actual.CompaniesHouseNumber);
+            Assert.AreEqual(charityNumber, actual.CharitiesCommissionNumber);
         }
 
         [Test, AutoData]

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -107,6 +108,18 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
                     providers[i].Postcode = legalContactElement.GetElementByLocalName("ContactAddress")
                         ?.GetElementByLocalName("PostCode")?.Value;
                 }
+
+                var verifications = new List<VerificationDetails>();
+                var verificationElements = match.GetElementsByLocalName("VerificationDetails");
+                foreach (var verificationElement in verificationElements)
+                {
+                    verifications.Add(new VerificationDetails
+                    {
+                        Authority = verificationElement.GetElementByLocalName("VerificationAuthority").Value,
+                        Id = verificationElement.GetElementByLocalName("VerificationID").Value,
+                    });
+                }
+                providers[i].Verifications = verifications.ToArray();
             }
 
             return providers;

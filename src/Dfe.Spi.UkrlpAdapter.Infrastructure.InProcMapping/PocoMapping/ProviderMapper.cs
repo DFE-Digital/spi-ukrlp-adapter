@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.WellKnownIdentifiers;
@@ -38,12 +39,28 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping
                 LegalName = provider.ProviderName,
                 Ukprn = provider.UnitedKingdomProviderReferenceNumber,
                 Postcode = provider.Postcode,
+                Urn = ReadVerificationValueAsLong(provider, "DfE (Schools Unique Reference Number)"),
+                DfeNumber = ReadVerificationValue(provider, "DfE (LEA Code and Establishment Number)"),
+                CompaniesHouseNumber = ReadVerificationValue(provider, "Companies House"),
+                CharitiesCommissionNumber = ReadVerificationValue(provider, "Charity Commission"),
             };
 
             learningProvider.Status =
                 await _translator.TranslateEnumValue(EnumerationNames.ProviderStatus, provider.ProviderStatus, cancellationToken);
             
             return learningProvider as TDestination;
+        }
+
+        private long? ReadVerificationValueAsLong(Provider provider, string verificationAuthority)
+        {
+            var value = ReadVerificationValue(provider, verificationAuthority);
+            return !string.IsNullOrEmpty(value) ? (long?)long.Parse(value) : null;
+        }
+        private string ReadVerificationValue(Provider provider, string verificationAuthority)
+        {
+            var verificationDetails = provider.Verifications.SingleOrDefault(vd =>
+                vd.Authority.Equals(verificationAuthority, StringComparison.InvariantCultureIgnoreCase));
+            return verificationDetails?.Id;
         }
     }
 }
