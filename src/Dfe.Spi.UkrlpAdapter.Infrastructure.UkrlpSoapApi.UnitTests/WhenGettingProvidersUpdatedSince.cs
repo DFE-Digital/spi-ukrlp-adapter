@@ -87,8 +87,6 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
                     $"Expected item {i} to have Ukprn {returnedProviders[i].Ukprn} but has {actual[i].UnitedKingdomProviderReferenceNumber}");
                 Assert.AreEqual(returnedProviders[i].Name, actual[i].ProviderName,
                     $"Expected item {i} to have Name {returnedProviders[i].Name} but has {actual[i].ProviderName}");
-                Assert.AreEqual(returnedProviders[i].Postcode, actual[i].Postcode,
-                    $"Expected item {i} to have Postcode {returnedProviders[i].Postcode} but has {actual[i].Postcode}");
             }
         }
 

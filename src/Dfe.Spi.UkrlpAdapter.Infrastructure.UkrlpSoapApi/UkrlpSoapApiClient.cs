@@ -105,14 +105,6 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
                     ProviderContacts = MapProviderContactsFromSoapProvider(match),
                 };
 
-                var legalContactElement = match.GetElementsByLocalName("ProviderContact")
-                    .FirstOrDefault(contactElement => contactElement.GetElementByLocalName("ContactType")?.Value == "L");
-                if (legalContactElement != null)
-                {
-                    providers[i].Postcode = legalContactElement.GetElementByLocalName("ContactAddress")
-                        ?.GetElementByLocalName("PostCode")?.Value;
-                }
-
                 var verifications = new List<VerificationDetails>();
                 var verificationElements = match.GetElementsByLocalName("VerificationDetails");
                 foreach (var verificationElement in verificationElements)

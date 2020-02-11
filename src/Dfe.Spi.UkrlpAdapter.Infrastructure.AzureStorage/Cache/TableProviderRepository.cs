@@ -79,7 +79,6 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
             {
                 UnitedKingdomProviderReferenceNumber = entity.UnitedKingdomProviderReferenceNumber,
                 ProviderName = entity.ProviderName,
-                Postcode = entity.Postcode,
             };
         }
 
@@ -98,7 +97,6 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
             {
                 UnitedKingdomProviderReferenceNumber = entity.UnitedKingdomProviderReferenceNumber,
                 ProviderName = entity.ProviderName,
-                Postcode = entity.Postcode,
             };
         }
 
@@ -125,7 +123,6 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
                 RowKey = rowKey,
                 UnitedKingdomProviderReferenceNumber = provider.UnitedKingdomProviderReferenceNumber,
                 ProviderName = provider.ProviderName,
-                Postcode = provider.Postcode,
             };
         }
         

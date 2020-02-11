@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
@@ -41,7 +42,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.UnitTests.PocoMappin
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldMapProviderToLearningProvider(Provider source, long urn, string dfeNumber, string charityNumber, string companyNumber)
+        public async Task ThenItShouldMapProviderToLearningProvider(Provider source, AddressStructure address, long urn, string dfeNumber, string charityNumber, string companyNumber)
         {
             source.Verifications = new[]
             {
@@ -50,13 +51,21 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.UnitTests.PocoMappin
                 new VerificationDetails {Authority = "Charity Commission", Id = charityNumber},
                 new VerificationDetails {Authority = "Companies House", Id = companyNumber},
             };
+            source.ProviderContacts = new[]
+            {
+                new ProviderContact
+                {
+                    ContactType = "L",
+                    ContactAddress = address,
+                }, 
+            };
             
             var actual = await _mapper.MapAsync<LearningProvider>(source, _cancellationToken) as LearningProvider;
 
             Assert.IsNotNull(actual);
             Assert.AreEqual(source.ProviderName, actual.Name);
             Assert.AreEqual(source.UnitedKingdomProviderReferenceNumber, actual.Ukprn);
-            Assert.AreEqual(source.Postcode, actual.Postcode);
+            Assert.AreEqual(address.PostCode, actual.Postcode);
             Assert.AreEqual(source.ProviderName, actual.LegalName);
             Assert.AreEqual(urn, actual.Urn);
             Assert.AreEqual(dfeNumber, actual.DfeNumber);

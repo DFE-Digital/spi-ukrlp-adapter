@@ -12,9 +12,6 @@ namespace Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi
         public DateTime? ExpiryDate { get; set; }
         public string ProviderStatus { get; set; }
         public VerificationDetails[] Verifications { get; set; }
-
-
-        public string Postcode { get; set; }
     }
 
     public class ProviderContact

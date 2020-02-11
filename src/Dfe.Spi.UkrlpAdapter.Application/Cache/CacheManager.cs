@@ -121,11 +121,6 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
                 return false;
             }
 
-            if (current.Postcode != staging.Postcode)
-            {
-                return false;
-            }
-
             return true;
         }
 
