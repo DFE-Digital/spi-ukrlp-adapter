@@ -98,7 +98,11 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
                 {
                     UnitedKingdomProviderReferenceNumber = long.Parse(match.GetElementByLocalName("UnitedKingdomProviderReferenceNumber").Value),
                     ProviderName = match.GetElementByLocalName("ProviderName").Value,
+                    AccessibleProviderName = match.GetElementByLocalName("AccessibleProviderName")?.Value,
                     ProviderStatus = match.GetElementByLocalName("ProviderStatus")?.Value,
+                    ProviderVerificationDate = ReadNullableDateTime(match.GetElementByLocalName("ProviderVerificationDate")),
+                    ExpiryDate = ReadNullableDateTime(match.GetElementByLocalName("ExpiryDate")),
+                    ProviderContacts = MapProviderContactsFromSoapProvider(match),
                 };
 
                 var legalContactElement = match.GetElementsByLocalName("ProviderContact")
@@ -123,6 +127,69 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
             }
 
             return providers;
+        }
+
+        private static ProviderContact[] MapProviderContactsFromSoapProvider(XElement providerElement)
+        {
+            var contactElements = providerElement.GetElementsByLocalName("ProviderContact");
+            if (contactElements == null || contactElements.Length == 0)
+            {
+                return new ProviderContact[0];
+            }
+
+            return contactElements.Select(contactElement => new ProviderContact
+            {
+                ContactType = contactElement.GetElementByLocalName("ContactType")?.Value,
+                ContactRole = contactElement.GetElementByLocalName("ContactRole")?.Value,
+                ContactTelephone1 = contactElement.GetElementByLocalName("ContactTelephone1")?.Value,
+                ContactTelephone2 = contactElement.GetElementByLocalName("ContactTelephone2")?.Value,
+                ContactFax = contactElement.GetElementByLocalName("ContactFax")?.Value,
+                ContactWebsiteAddress = contactElement.GetElementByLocalName("ContactWebsiteAddress")?.Value,
+                ContactEmail = contactElement.GetElementByLocalName("ContactEmail")?.Value,
+                LastUpdated = ReadNullableDateTime(contactElement.GetElementByLocalName("LastUpdated")),
+                ContactAddress = MapContactAddressFromSoapContactElement(contactElement),
+                ContactPersonalDetails = MapPersonNameStructureFromSoapContactElement(contactElement),
+            }).ToArray();
+        }
+
+        private static AddressStructure MapContactAddressFromSoapContactElement(XElement contactElement)
+        {
+            var addressElement = contactElement.GetElementByLocalName("ContactAddress");
+            return addressElement == null
+                ? null
+                : new AddressStructure
+                {
+                    Address1 = addressElement.GetElementByLocalName("Address1")?.Value,
+                    Address2 = addressElement.GetElementByLocalName("Address2")?.Value,
+                    Address3 = addressElement.GetElementByLocalName("Address3")?.Value,
+                    Address4 = addressElement.GetElementByLocalName("Address4")?.Value,
+                    Town = addressElement.GetElementByLocalName("Town")?.Value,
+                    County = addressElement.GetElementByLocalName("County")?.Value,
+                    PostCode = addressElement.GetElementByLocalName("PostCode")?.Value,
+                };
+        }
+        private static PersonNameStructure MapPersonNameStructureFromSoapContactElement(XElement contactElement)
+        {
+            var personalDetailsElement = contactElement.GetElementByLocalName("ContactPersonalDetails");
+            return personalDetailsElement == null
+                ? null
+                : new PersonNameStructure
+                {
+                    PersonNameTitle = personalDetailsElement.GetElementByLocalName("PersonNameTitle")?.Value,
+                    PersonGivenName = personalDetailsElement.GetElementByLocalName("PersonGivenName")?.Value,
+                    PersonFamilyName = personalDetailsElement.GetElementByLocalName("PersonFamilyName")?.Value,
+                    PersonNameSuffix = personalDetailsElement.GetElementByLocalName("PersonNameSuffix")?.Value,
+                    PersonRequestedName = personalDetailsElement.GetElementByLocalName("PersonRequestedName")?.Value,
+                };
+        }
+        private static DateTime? ReadNullableDateTime(XElement element)
+        {
+            if (element == null)
+            {
+                return null;
+            }
+
+            return DateTime.Parse(element.Value);
         }
     }
 }
