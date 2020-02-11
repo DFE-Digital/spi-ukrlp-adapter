@@ -42,7 +42,9 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.UnitTests.PocoMappin
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldMapProviderToLearningProvider(Provider source, AddressStructure address, long urn, string dfeNumber, string charityNumber, string companyNumber)
+        public async Task ThenItShouldMapProviderToLearningProvider(Provider source, 
+            AddressStructure address, string websiteAddress,
+            long urn, string dfeNumber, string charityNumber, string companyNumber)
         {
             source.Verifications = new[]
             {
@@ -58,6 +60,11 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.UnitTests.PocoMappin
                     ContactType = "L",
                     ContactAddress = address,
                 }, 
+                new ProviderContact
+                {
+                    ContactType = "P",
+                    ContactWebsiteAddress = websiteAddress,
+                }, 
             };
             
             var actual = await _mapper.MapAsync<LearningProvider>(source, _cancellationToken) as LearningProvider;
@@ -71,6 +78,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.UnitTests.PocoMappin
             Assert.AreEqual(dfeNumber, actual.DfeNumber);
             Assert.AreEqual(companyNumber, actual.CompaniesHouseNumber);
             Assert.AreEqual(charityNumber, actual.CharitiesCommissionNumber);
+            Assert.AreEqual(websiteAddress, actual.Website);
         }
 
         [Test, AutoData]

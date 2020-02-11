@@ -33,18 +33,20 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping
                     $"TDestination must be LearningProvider, but received {typeof(TDestination).FullName}", nameof(source));
             }
 
-            var location = provider.ProviderContacts.FirstOrDefault(c => c.ContactType == "L");
+            var legalAddress = provider.ProviderContacts.FirstOrDefault(c => c.ContactType == "L");
+            var primaryContact = provider.ProviderContacts.FirstOrDefault(c => c.ContactType == "P");
 
             var learningProvider = new LearningProvider
             {
                 Name = provider.ProviderName,
                 LegalName = provider.ProviderName,
                 Ukprn = provider.UnitedKingdomProviderReferenceNumber,
-                Postcode = location?.ContactAddress.PostCode,
+                Postcode = legalAddress?.ContactAddress.PostCode,
                 Urn = ReadVerificationValueAsLong(provider, "DfE (Schools Unique Reference Number)"),
                 DfeNumber = ReadVerificationValue(provider, "DfE (LEA Code and Establishment Number)"),
                 CompaniesHouseNumber = ReadVerificationValue(provider, "Companies House"),
                 CharitiesCommissionNumber = ReadVerificationValue(provider, "Charity Commission"),
+                Website = primaryContact?.ContactWebsiteAddress,
             };
 
             learningProvider.Status =
