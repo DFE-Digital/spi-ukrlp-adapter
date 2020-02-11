@@ -116,11 +116,85 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
 
         private bool AreSame(Provider current, Provider staging)
         {
-            if (current.ProviderName != staging.ProviderName)
+            if (current.ProviderName != staging.ProviderName ||
+                current.AccessibleProviderName != staging.AccessibleProviderName ||
+                current.ProviderVerificationDate != staging.ProviderVerificationDate ||
+                current.ExpiryDate != staging.ExpiryDate ||
+                current.ProviderStatus != staging.ProviderStatus)
             {
                 return false;
             }
 
+            if (!AreSame(current.ProviderContacts, staging.ProviderContacts))
+            {
+                return false;
+            }
+
+            return true;
+        }
+        private bool AreSame(ProviderContact[] current, ProviderContact[] staging)
+        {
+            if (current == null && staging == null)
+            {
+                return true;
+            }
+
+            var currentLegalAddress = current?.SingleOrDefault(c => c.ContactType == "L");
+            var stagingLegalAddress = staging?.SingleOrDefault(c => c.ContactType == "L");
+            if (!AreSame(currentLegalAddress, stagingLegalAddress))
+            {
+                return false;
+            }
+            
+            var currentPrimaryContact = current?.SingleOrDefault(c => c.ContactType == "P");
+            var stagingPrimaryContact = staging?.SingleOrDefault(c => c.ContactType == "P");
+            return AreSame(currentPrimaryContact, stagingPrimaryContact);
+        }
+        private bool AreSame(ProviderContact current, ProviderContact staging)
+        {
+            if (current?.ContactRole != staging?.ContactRole ||
+                current?.ContactTelephone1 != staging?.ContactTelephone1 ||
+                current?.ContactTelephone2 != staging?.ContactTelephone2 ||
+                current?.ContactFax != staging?.ContactFax ||
+                current?.ContactWebsiteAddress != staging?.ContactWebsiteAddress ||
+                current?.ContactEmail != staging?.ContactEmail)
+            {
+                return false;
+            }
+
+            if (!AreSame(current?.ContactAddress, staging?.ContactAddress))
+            {
+                return false;
+            }
+
+            return AreSame(current?.ContactPersonalDetails, staging?.ContactPersonalDetails);
+        }
+        private bool AreSame(AddressStructure current, AddressStructure staging)
+        {
+            if (current?.Address1 != staging?.Address1 ||
+                current?.Address2 != staging?.Address2 ||
+                current?.Address3 != staging?.Address3 ||
+                current?.Address4 != staging?.Address4 ||
+                current?.Town != staging?.Town ||
+                current?.County != staging?.County ||
+                current?.PostCode != staging?.PostCode)
+            {
+                return false;
+            }
+            
+            return true;
+        }
+        private bool AreSame(PersonNameStructure current, PersonNameStructure staging)
+        {
+            if (current?.PersonNameTitle != staging?.PersonNameTitle ||
+                current?.PersonGivenName != staging?.PersonGivenName ||
+                current?.PersonFamilyName != staging?.PersonFamilyName ||
+                current?.PersonNameSuffix != staging?.PersonNameSuffix ||
+                current?.PersonRequestedName != staging?.PersonRequestedName)
+            {
+                return false;
+            }
+            
             return true;
         }
 
