@@ -7,6 +7,7 @@ using Dfe.Spi.UkrlpAdapter.Domain.Cache;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
 using Microsoft.Azure.Cosmos.Table;
+using Newtonsoft.Json;
 
 namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
 {
@@ -75,12 +76,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
                 return null;
             }
 
-            return new Provider
-            {
-                UnitedKingdomProviderReferenceNumber = entity.UnitedKingdomProviderReferenceNumber,
-                ProviderName = entity.ProviderName,
-                Postcode = entity.Postcode,
-            };
+            return JsonConvert.DeserializeObject<Provider>(entity.ProviderJson);
         }
 
         public async Task<Provider> GetProviderFromStagingAsync(long ukprn, CancellationToken cancellationToken)
@@ -94,12 +90,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
                 return null;
             }
 
-            return new Provider
-            {
-                UnitedKingdomProviderReferenceNumber = entity.UnitedKingdomProviderReferenceNumber,
-                ProviderName = entity.ProviderName,
-                Postcode = entity.Postcode,
-            };
+            return JsonConvert.DeserializeObject<Provider>(entity.ProviderJson);
         }
 
 
@@ -123,9 +114,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
             {
                 PartitionKey = partitionKey,
                 RowKey = rowKey,
-                UnitedKingdomProviderReferenceNumber = provider.UnitedKingdomProviderReferenceNumber,
-                ProviderName = provider.ProviderName,
-                Postcode = provider.Postcode,
+                ProviderJson = JsonConvert.SerializeObject(provider),
             };
         }
         
