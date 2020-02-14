@@ -18,7 +18,8 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping
             _translator = translator;
         }
 
-        internal override async Task<TDestination> MapAsync<TDestination>(object source, CancellationToken cancellationToken)
+        internal override async Task<TDestination> MapAsync<TDestination>(object source,
+            CancellationToken cancellationToken)
         {
             var provider = source as Provider;
             if (provider == null)
@@ -30,11 +31,20 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping
             if (typeof(TDestination) != typeof(LearningProvider))
             {
                 throw new ArgumentException(
-                    $"TDestination must be LearningProvider, but received {typeof(TDestination).FullName}", nameof(source));
+                    $"TDestination must be LearningProvider, but received {typeof(TDestination).FullName}",
+                    nameof(source));
             }
 
             var legalAddress = provider.ProviderContacts.FirstOrDefault(c => c.ContactType == "L");
             var primaryContact = provider.ProviderContacts.FirstOrDefault(c => c.ContactType == "P");
+
+            var telephones = new[]
+            {
+                legalAddress?.ContactTelephone1,
+                legalAddress?.ContactTelephone2,
+                primaryContact?.ContactTelephone1,
+                primaryContact?.ContactTelephone2,
+            };
 
             var learningProvider = new LearningProvider
             {
@@ -47,19 +57,28 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping
                 CompaniesHouseNumber = ReadVerificationValue(provider, "Companies House"),
                 CharitiesCommissionNumber = ReadVerificationValue(provider, "Charity Commission"),
                 Website = primaryContact?.ContactWebsiteAddress,
+                TelephoneNumber = telephones.FirstOrDefault(t => !string.IsNullOrEmpty(t)),
+                ContactEmail = legalAddress?.ContactEmail ?? primaryContact?.ContactEmail,
+                AddressLine1 = legalAddress?.ContactAddress?.Address1,
+                AddressLine2 = legalAddress?.ContactAddress?.Address2,
+                AddressLine3 = legalAddress?.ContactAddress?.Address3,
+                Town = legalAddress?.ContactAddress?.Town,
+                County = legalAddress?.ContactAddress?.County,
             };
 
             learningProvider.Status =
-                await _translator.TranslateEnumValue(EnumerationNames.ProviderStatus, provider.ProviderStatus, cancellationToken);
-            
+                await _translator.TranslateEnumValue(EnumerationNames.ProviderStatus, provider.ProviderStatus,
+                    cancellationToken);
+
             return learningProvider as TDestination;
         }
 
         private long? ReadVerificationValueAsLong(Provider provider, string verificationAuthority)
         {
             var value = ReadVerificationValue(provider, verificationAuthority);
-            return !string.IsNullOrEmpty(value) ? (long?)long.Parse(value) : null;
+            return !string.IsNullOrEmpty(value) ? (long?) long.Parse(value) : null;
         }
+
         private string ReadVerificationValue(Provider provider, string verificationAuthority)
         {
             var verificationDetails = provider.Verifications.SingleOrDefault(vd =>
