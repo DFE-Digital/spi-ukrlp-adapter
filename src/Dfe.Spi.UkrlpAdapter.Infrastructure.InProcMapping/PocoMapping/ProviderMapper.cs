@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 using Dfe.Spi.UkrlpAdapter.Domain.Translation;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
 
@@ -11,10 +14,14 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping
 {
     internal class ProviderMapper : ObjectMapper
     {
+        private static PropertyInfo[] _propertyInfos;
+
         private readonly ITranslator _translator;
 
         public ProviderMapper(ITranslator translator)
         {
+            _propertyInfos = typeof(LearningProvider).GetProperties();
+
             _translator = translator;
         }
 
@@ -59,12 +66,32 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping
                 Website = primaryContact?.ContactWebsiteAddress,
                 TelephoneNumber = telephones.FirstOrDefault(t => !string.IsNullOrEmpty(t)),
                 ContactEmail = legalAddress?.ContactEmail ?? primaryContact?.ContactEmail,
-                AddressLine1 = legalAddress?.ContactAddress?.Address1,
-                AddressLine2 = legalAddress?.ContactAddress?.Address2,
-                AddressLine3 = legalAddress?.ContactAddress?.Address3,
-                Town = legalAddress?.ContactAddress?.Town,
-                County = legalAddress?.ContactAddress?.County,
+                Address = new Address()
+                {
+                    AddressLine1 = legalAddress?.ContactAddress?.Address1,
+                    AddressLine2 = legalAddress?.ContactAddress?.Address2,
+                    AddressLine3 = legalAddress?.ContactAddress?.Address3,
+                    Town = legalAddress?.ContactAddress?.Town,
+                    County = legalAddress?.ContactAddress?.County,
+                },
             };
+
+            DateTime readDate = DateTime.UtcNow;
+
+            // This is is about as complicated as it gets for now.
+            // When we do stuff with management groups, might have to get a
+            // little more involved.
+            Dictionary<string, LineageEntry> lineage =
+                _propertyInfos
+                    .Where(x => !x.Name.StartsWith("_") && (x.GetValue(learningProvider) != null))
+                    .ToDictionary(
+                        x => x.Name,
+                        x => new LineageEntry()
+                        {
+                            ReadDate = readDate,
+                        });
+
+            learningProvider._Lineage = lineage;
 
             learningProvider.Status =
                 await _translator.TranslateEnumValue(EnumerationNames.ProviderStatus, provider.ProviderStatus,

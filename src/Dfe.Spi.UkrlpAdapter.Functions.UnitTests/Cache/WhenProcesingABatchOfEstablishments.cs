@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.UkrlpAdapter.Application.Cache;
 using Dfe.Spi.UkrlpAdapter.Functions.Cache;
@@ -13,6 +14,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.Cache
     public class WhenProcesingABatchOfEstablishments
     {
         private Mock<ICacheManager> _cacheManagerMock;
+        private Mock<IHttpSpiExecutionContextManager> _httpSpiExecutionContextManager;
         private Mock<ILoggerWrapper> _loggerMock;
         private ProcessBatchOfProviders _function;
         private CancellationToken _cancellationToken;
@@ -22,10 +24,13 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.Cache
         {
             _cacheManagerMock = new Mock<ICacheManager>();
 
+            _httpSpiExecutionContextManager = new Mock<IHttpSpiExecutionContextManager>();
+
             _loggerMock = new Mock<ILoggerWrapper>();
 
             _function = new ProcessBatchOfProviders(
                 _cacheManagerMock.Object,
+                _httpSpiExecutionContextManager.Object,
                 _loggerMock.Object);
 
             _cancellationToken = default(CancellationToken);
