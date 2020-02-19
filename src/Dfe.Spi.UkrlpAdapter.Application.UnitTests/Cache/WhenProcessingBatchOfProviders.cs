@@ -2,7 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.UnitTesting.Fixtures;
-using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 using Dfe.Spi.UkrlpAdapter.Application.Cache;
 using Dfe.Spi.UkrlpAdapter.Domain.Cache;
 using Dfe.Spi.UkrlpAdapter.Domain.Events;

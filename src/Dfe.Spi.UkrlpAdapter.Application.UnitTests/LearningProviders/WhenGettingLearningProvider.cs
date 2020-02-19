@@ -5,7 +5,7 @@ using AutoFixture;
 using AutoFixture.NUnit3;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.UnitTesting.Fixtures;
-using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 using Dfe.Spi.UkrlpAdapter.Application.LearningProviders;
 using Dfe.Spi.UkrlpAdapter.Domain.Mapping;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;

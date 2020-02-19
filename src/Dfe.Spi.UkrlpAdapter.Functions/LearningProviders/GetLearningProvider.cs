@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
+using Dfe.Spi.Common.Http.Server.Definitions;
 
 namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
 {
@@ -15,11 +16,13 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
         private const string FunctionName = nameof(GetLearningProvider);
 
         private readonly ILearningProviderManager _learningProviderManager;
+        private readonly IHttpSpiExecutionContextManager _httpSpiExecutionContextManager;
         private readonly ILoggerWrapper _logger;
 
-        public GetLearningProvider(ILearningProviderManager learningProviderManager, ILoggerWrapper logger)
+        public GetLearningProvider(ILearningProviderManager learningProviderManager, IHttpSpiExecutionContextManager httpSpiExecutionContextManager, ILoggerWrapper logger)
         {
             _learningProviderManager = learningProviderManager;
+            _httpSpiExecutionContextManager = httpSpiExecutionContextManager;
             _logger = logger;
         }
         
@@ -30,7 +33,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
             string id,
             CancellationToken cancellationToken)
         {
-            _logger.SetContext(req.Headers);
+            _httpSpiExecutionContextManager.SetContext(req.Headers);
             _logger.Info($"{FunctionName} triggered at {DateTime.Now} with id {id}");
 
             try

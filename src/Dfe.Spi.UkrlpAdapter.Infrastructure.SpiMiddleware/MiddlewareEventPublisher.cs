@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
-using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
 using Dfe.Spi.UkrlpAdapter.Domain.Events;
 using Newtonsoft.Json;

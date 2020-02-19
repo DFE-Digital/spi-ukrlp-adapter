@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.UkrlpAdapter.Application.Cache;
 using Dfe.Spi.UkrlpAdapter.Domain.Cache;
@@ -14,11 +15,13 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.Cache
         private const string FunctionName = nameof(ProcessBatchOfProviders);
 
         private readonly ICacheManager _cacheManager;
+        private readonly IHttpSpiExecutionContextManager _httpSpiExecutionContextManager;
         private readonly ILoggerWrapper _logger;
 
-        public ProcessBatchOfProviders(ICacheManager cacheManager, ILoggerWrapper logger)
+        public ProcessBatchOfProviders(ICacheManager cacheManager, IHttpSpiExecutionContextManager httpSpiExecutionContextManager, ILoggerWrapper logger)
         {
             _cacheManager = cacheManager;
+            _httpSpiExecutionContextManager = httpSpiExecutionContextManager;
             _logger = logger;
         }
         
@@ -29,7 +32,8 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.Cache
             string queueContent, 
             CancellationToken cancellationToken)
         {
-            _logger.SetInternalRequestId(Guid.NewGuid());
+            _httpSpiExecutionContextManager.SetInternalRequestId(Guid.NewGuid());
+
             _logger.Info($"{FunctionName} trigger with: {queueContent}");
 
             var ukprns = JsonConvert.DeserializeObject<long[]>(queueContent);

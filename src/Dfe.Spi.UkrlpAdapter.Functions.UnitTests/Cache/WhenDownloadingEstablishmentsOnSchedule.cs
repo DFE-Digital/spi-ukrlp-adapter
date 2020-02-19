@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.UkrlpAdapter.Application.Cache;
 using Dfe.Spi.UkrlpAdapter.Functions.Cache;
@@ -14,6 +15,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.Cache
     public class WhenDownloadingEstablishmentsOnSchedule
     {
         private Mock<ICacheManager> _cacheManagerMock;
+        private Mock<IHttpSpiExecutionContextManager> _httpSpiExecutionContextManagerMock;
         private Mock<ILoggerWrapper> _loggerMock;
         private DownloadProvidersScheduled _function;
         private TimerInfo _timerInfo;
@@ -24,10 +26,13 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.Cache
         {
             _cacheManagerMock = new Mock<ICacheManager>();
 
+            _httpSpiExecutionContextManagerMock = new Mock<IHttpSpiExecutionContextManager>();
+
             _loggerMock = new Mock<ILoggerWrapper>();
 
             _function = new DownloadProvidersScheduled(
                 _cacheManagerMock.Object,
+                _httpSpiExecutionContextManagerMock.Object,
                 _loggerMock.Object);
 
             _timerInfo = new TimerInfo(new ConstantSchedule(

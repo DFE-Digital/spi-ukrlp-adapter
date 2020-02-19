@@ -2,9 +2,10 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.UnitTesting.Fixtures;
-using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 using Dfe.Spi.UkrlpAdapter.Application.LearningProviders;
 using Dfe.Spi.UkrlpAdapter.Functions.LearningProviders;
 using Microsoft.AspNetCore.Http;
@@ -18,6 +19,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
     public class WhenGettingLearningProvider
     {
         private Mock<ILearningProviderManager> _learningProviderManagerMock;
+        private Mock<IHttpSpiExecutionContextManager> _httpSpiExecutionContextManager;
         private Mock<ILoggerWrapper> _loggerMock;
         private GetLearningProvider _function;
         private CancellationToken _cancellationToken;
@@ -27,10 +29,13 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
         {
             _learningProviderManagerMock = new Mock<ILearningProviderManager>();
 
+            _httpSpiExecutionContextManager = new Mock<IHttpSpiExecutionContextManager>();
+
             _loggerMock = new Mock<ILoggerWrapper>();
 
             _function = new GetLearningProvider(
                 _learningProviderManagerMock.Object,
+                _httpSpiExecutionContextManager.Object,
                 _loggerMock.Object);
 
             _cancellationToken = new CancellationToken();

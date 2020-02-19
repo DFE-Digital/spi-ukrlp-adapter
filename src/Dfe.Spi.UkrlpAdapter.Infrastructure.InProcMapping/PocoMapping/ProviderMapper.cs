@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.Models;
+using Dfe.Spi.Models.Entities;
 using Dfe.Spi.UkrlpAdapter.Domain.Translation;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
 
@@ -59,11 +60,14 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping
                 Website = primaryContact?.ContactWebsiteAddress,
                 TelephoneNumber = telephones.FirstOrDefault(t => !string.IsNullOrEmpty(t)),
                 ContactEmail = legalAddress?.ContactEmail ?? primaryContact?.ContactEmail,
-                AddressLine1 = legalAddress?.ContactAddress?.Address1,
-                AddressLine2 = legalAddress?.ContactAddress?.Address2,
-                AddressLine3 = legalAddress?.ContactAddress?.Address3,
-                Town = legalAddress?.ContactAddress?.Town,
-                County = legalAddress?.ContactAddress?.County,
+                Address = new Address()
+                {
+                    AddressLine1 = legalAddress?.ContactAddress?.Address1,
+                    AddressLine2 = legalAddress?.ContactAddress?.Address2,
+                    AddressLine3 = legalAddress?.ContactAddress?.Address3,
+                    Town = legalAddress?.ContactAddress?.Town,
+                    County = legalAddress?.ContactAddress?.County,
+                },
             };
 
             learningProvider.Status =
