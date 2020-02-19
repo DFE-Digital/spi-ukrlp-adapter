@@ -46,7 +46,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
         {
             var ukprn = _fixture.Create<long>();
 
-            await _manager.GetLearningProviderAsync(ukprn.ToString(), _cancellationToken);
+            await _manager.GetLearningProviderAsync(ukprn.ToString(), null, _cancellationToken);
 
             _ukrlpApiClientMock.Verify(c => c.GetProviderAsync(ukprn, _cancellationToken),
                 Times.Once);
@@ -56,14 +56,14 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
         public void ThenItShouldThrowExceptionIfIdIsNotNumeric()
         {
             Assert.ThrowsAsync<ArgumentException>(async () =>
-                await _manager.GetLearningProviderAsync("NotANumber", _cancellationToken));
+                await _manager.GetLearningProviderAsync("NotANumber", null, _cancellationToken));
         }
 
         [Test]
         public void ThenItShouldThrowExceptionIfIdIsNot8Digits()
         {
             Assert.ThrowsAsync<ArgumentException>(async () =>
-                await _manager.GetLearningProviderAsync("123456789", _cancellationToken));
+                await _manager.GetLearningProviderAsync("123456789", null, _cancellationToken));
         }
 
         [Test, AutoData]
@@ -74,7 +74,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
             _ukrlpApiClientMock.Setup(c => c.GetProviderAsync(ukprn, _cancellationToken))
                 .ReturnsAsync(establishment);
 
-            await _manager.GetLearningProviderAsync(ukprn.ToString(), _cancellationToken);
+            await _manager.GetLearningProviderAsync(ukprn.ToString(), null, _cancellationToken);
 
             _mapperMock.Verify(m => m.MapAsync<LearningProvider>(establishment, _cancellationToken),
                 Times.Once);
@@ -90,7 +90,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
             _mapperMock.Setup(m => m.MapAsync<LearningProvider>(It.IsAny<Provider>(), _cancellationToken))
                 .ReturnsAsync(learningProvider);
 
-            var actual = await _manager.GetLearningProviderAsync(ukprn.ToString(), _cancellationToken);
+            var actual = await _manager.GetLearningProviderAsync(ukprn.ToString(), null, _cancellationToken);
 
             Assert.AreSame(learningProvider, actual);
         }
@@ -103,7 +103,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
             _ukrlpApiClientMock.Setup(c => c.GetProviderAsync(ukprn, _cancellationToken))
                 .ReturnsAsync((Provider) null);
 
-            var actual = await _manager.GetLearningProviderAsync(ukprn.ToString(), _cancellationToken);
+            var actual = await _manager.GetLearningProviderAsync(ukprn.ToString(), null, _cancellationToken);
 
             Assert.IsNull(actual);
         }

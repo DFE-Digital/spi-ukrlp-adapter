@@ -45,22 +45,22 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
         public async Task ThenItShouldReturnLearningProviderIfFound(int urn, LearningProvider provider)
         {
             _learningProviderManagerMock.Setup(x =>
-                    x.GetLearningProviderAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    x.GetLearningProviderAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(provider);
 
             var actual = await _function.Run(new DefaultHttpRequest(new DefaultHttpContext()), urn.ToString(),
                 _cancellationToken);
 
             Assert.IsNotNull(actual);
-            Assert.IsInstanceOf<OkObjectResult>(actual);
-            Assert.AreSame(provider, ((OkObjectResult) actual).Value);
+            Assert.IsInstanceOf<JsonResult>(actual);
+            Assert.AreSame(provider, ((JsonResult) actual).Value);
         }
 
         [Test]
         public async Task ThenItShouldReturnNotFoundResultIfNotFound()
         {
             _learningProviderManagerMock.Setup(x =>
-                    x.GetLearningProviderAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    x.GetLearningProviderAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((LearningProvider) null);
 
             var actual = await _function.Run(new DefaultHttpRequest(new DefaultHttpContext()), "123",
@@ -74,7 +74,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
         public async Task ThenItShouldReturnBadRequestResultIfArgumentExceptionThrown(string message)
         {
             _learningProviderManagerMock.Setup(x =>
-                    x.GetLearningProviderAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    x.GetLearningProviderAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new ArgumentException(message));
 
             var actual = await _function.Run(new DefaultHttpRequest(new DefaultHttpContext()), "123",
