@@ -8,6 +8,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Dfe.Spi.Common.Http.Server.Definitions;
+using Newtonsoft.Json;
 
 namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
 {
@@ -34,11 +35,14 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
             CancellationToken cancellationToken)
         {
             _httpSpiExecutionContextManager.SetContext(req.Headers);
+
+            string fields = req.Query["fields"];
+
             _logger.Info($"{FunctionName} triggered at {DateTime.Now} with id {id}");
 
             try
             {
-                var learningProvider = await _learningProviderManager.GetLearningProviderAsync(id, cancellationToken);
+                var learningProvider = await _learningProviderManager.GetLearningProviderAsync(id, fields, cancellationToken);
 
                 if (learningProvider == null)
                 {
@@ -47,7 +51,16 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
                 }
 
                 _logger.Info($"{FunctionName} found learning provider with id {id}. Returning ok");
-                return new OkObjectResult(learningProvider);
+                if (JsonConvert.DefaultSettings != null)
+                {
+                    return new JsonResult(
+                        learningProvider,
+                        JsonConvert.DefaultSettings());
+                }
+                else
+                {
+                    return new JsonResult(learningProvider);
+                }
             }
             catch (ArgumentException ex)
             {

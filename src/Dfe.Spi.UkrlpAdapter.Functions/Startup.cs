@@ -1,4 +1,7 @@
 using System.IO;
+using Dfe.Spi.Common.Context.Definitions;
+using Dfe.Spi.Common.Http.Server;
+using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.UkrlpAdapter.Application.Cache;
@@ -20,6 +23,8 @@ using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using RestSharp;
 
 [assembly: FunctionsStartup(typeof(Startup))]
@@ -32,6 +37,13 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
 
         public override void Configure(IFunctionsHostBuilder builder)
         {
+            JsonConvert.DefaultSettings =
+                () => new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                    NullValueHandling = NullValueHandling.Ignore,
+                };
+
             var services = builder.Services;
 
             LoadAndAddConfiguration(services);
@@ -108,6 +120,9 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
         {
             services.AddScoped<ILearningProviderManager, LearningProviderManager>();
             services.AddScoped<ICacheManager, CacheManager>();
+
+            services.AddScoped<IHttpSpiExecutionContextManager, HttpSpiExecutionContextManager>();
+            services.AddScoped<ISpiExecutionContextManager>(x => x.GetService<IHttpSpiExecutionContextManager>());
         }
     }
 }
