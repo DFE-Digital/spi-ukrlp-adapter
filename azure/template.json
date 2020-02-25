@@ -42,19 +42,31 @@
     "middlewareUrl": {
       "type": "string"
     },
-    "middlewareFunctionsKey": {
+    "middlewareSubscriptionKey": {
       "type": "securestring"
     },
     "translatorUrl": {
       "type": "string"
     },
-    "translatorFunctionsKey": {
+    "translatorSubscriptionKey": {
       "type": "securestring"
     },
     "eapimIp": {
       "type": "string",
       "minLength": 7,
       "maxLength": 15
+    },
+    "authenticationTokenEndpoint": {
+      "type": "string"
+    },
+    "authenticationClientId": {
+      "type": "string"
+    },
+    "authenticationClientSecret": {
+      "type": "securestring"
+    },
+    "authenticationResource": {
+      "type": "string"
     }
   },
   "variables": {
@@ -195,16 +207,32 @@
               "value": "[parameters('middlewareUrl')]"
             },
             {
-              "name": "SPI_Middleware__FunctionsKey",
-              "value": "[parameters('middlewareFunctionsKey')]"
+              "name": "SPI_Middleware__SubscriptionKey",
+              "value": "[parameters('middlewareSubscriptionKey')]"
             },
             {
               "name": "SPI_Translator__BaseUrl",
               "value": "[parameters('translatorUrl')]"
             },
             {
-              "name": "SPI_Translator__FunctionsKey",
-              "value": "[parameters('translatorFunctionsKey')]"
+              "name": "SPI_Translator__SubscriptionKey",
+              "value": "[parameters('translatorSubscriptionKey')]"
+            },
+            {
+              "name": "SPI_Authentication__TokenEndpoint",
+              "value": "[parameters('authenticationTokenEndpoint')]"
+            },
+            {
+              "name": "SPI_Authentication__ClientId",
+              "value": "[parameters('authenticationClientId')]"
+            },
+            {
+              "name": "SPI_Authentication__ClientSecret",
+              "value": "[parameters('authenticationClientSecret')]"
+            },
+            {
+              "name": "SPI_Authentication__Resource",
+              "value": "[parameters('authenticationResource')]"
             }
           ],
           "ipSecurityRestrictions": [

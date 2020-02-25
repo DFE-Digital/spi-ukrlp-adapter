@@ -69,6 +69,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
             _configuration = new UkrlpAdapterConfiguration();
             _rawConfiguration.Bind(_configuration);
             services.AddSingleton(_configuration);
+            services.AddSingleton(_configuration.Authentication);
             services.AddSingleton(_configuration.UkrlpApi);
             services.AddSingleton(_configuration.Cache);
             services.AddSingleton(_configuration.Middleware);
