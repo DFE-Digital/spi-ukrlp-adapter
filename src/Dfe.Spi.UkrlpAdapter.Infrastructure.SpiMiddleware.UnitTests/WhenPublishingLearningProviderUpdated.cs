@@ -15,6 +15,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware.UnitTests
 {
     public class WhenPublishingLearningProviderUpdated
     {
+        private AuthenticationConfiguration _authenticationConfiguration;
         private Mock<IRestClient> _restClientMock;
         private Mock<ILoggerWrapper> _loggerMock;
         private MiddlewareEventPublisher _publisher;
@@ -24,6 +25,14 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware.UnitTests
         [SetUp]
         public void Arrange()
         {
+            _authenticationConfiguration = new AuthenticationConfiguration()
+            {
+                ClientId = "some client id",
+                ClientSecret = "some secret",
+                Resource = "http://some.fake.url/abc123",
+                TokenEndpoint = "https://somecorp.local/tokens",
+            };
+
             _restClientMock = new Mock<IRestClient>();
             _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new RestResponse
@@ -40,6 +49,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware.UnitTests
             };
 
             _publisher = new MiddlewareEventPublisher(
+                _authenticationConfiguration,
                 _configuration,
                 _restClientMock.Object,
                 _loggerMock.Object);

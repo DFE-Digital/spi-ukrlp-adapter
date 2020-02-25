@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Http.Client;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Models.Entities;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
@@ -15,16 +16,25 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware
         private readonly IRestClient _restClient;
         private readonly ILoggerWrapper _logger;
 
-        public MiddlewareEventPublisher(MiddlewareConfiguration configuration, IRestClient restClient,
+        public MiddlewareEventPublisher(
+            AuthenticationConfiguration authenticationConfiguration,
+            MiddlewareConfiguration configuration,
+            IRestClient restClient,
             ILoggerWrapper logger)
         {
             _restClient = restClient;
             _restClient.BaseUrl = new Uri(configuration.BaseUrl, UriKind.Absolute);
-            if (!string.IsNullOrEmpty(configuration.FunctionsKey))
+            if (!string.IsNullOrEmpty(configuration.SubscriptionKey))
             {
-                _restClient.DefaultParameters.Add(new Parameter("x-functions-key", configuration.FunctionsKey,
+                _restClient.DefaultParameters.Add(new Parameter("Ocp-Apim-Subscription-Key", configuration.SubscriptionKey,
                     ParameterType.HttpHeader));
             }
+
+            _restClient.Authenticator = new OAuth2ClientCredentialsAuthenticator(
+                authenticationConfiguration.TokenEndpoint,
+                authenticationConfiguration.ClientId,
+                authenticationConfiguration.ClientSecret,
+                authenticationConfiguration.Resource);
 
             _logger = logger;
         }
