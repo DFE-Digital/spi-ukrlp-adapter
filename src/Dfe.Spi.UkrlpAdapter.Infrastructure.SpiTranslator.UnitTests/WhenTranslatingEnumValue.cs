@@ -2,6 +2,8 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.Context.Definitions;
+using Dfe.Spi.Common.Context.Models;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
@@ -14,15 +16,25 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator.UnitTests
 {
     public class WhenTranslatingEnumValue
     {
+        private AuthenticationConfiguration _authenticationConfiguration;
         private Mock<IRestClient> _restClientMock;
         private TranslatorConfiguration _configuration;
         private Mock<ILoggerWrapper> _loggerMock;
         private TranslatorApiClient _translator;
+        private Mock<ISpiExecutionContextManager> _spiExecutionContextManagerMock;
         private CancellationToken _cancellationToken;
 
         [SetUp]
         public void Arrange()
         {
+            _authenticationConfiguration = new AuthenticationConfiguration()
+            {
+                ClientId = "some client id",
+                ClientSecret = "some secret",
+                Resource = "http://some.fake.url/abc123",
+                TokenEndpoint = "https://somecorp.local/tokens",
+            };
+
             _restClientMock = new Mock<IRestClient>();
             _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new RestResponse
@@ -39,10 +51,16 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator.UnitTests
 
             _loggerMock = new Mock<ILoggerWrapper>();
 
+            _spiExecutionContextManagerMock = new Mock<ISpiExecutionContextManager>();
+            _spiExecutionContextManagerMock.Setup(x => x.SpiExecutionContext)
+                .Returns(new SpiExecutionContext());
+
             _translator = new TranslatorApiClient(
+                _authenticationConfiguration,
                 _restClientMock.Object,
                 _configuration,
-                _loggerMock.Object);
+                _loggerMock.Object,
+                _spiExecutionContextManagerMock.Object);
 
             _cancellationToken = new CancellationToken();
         }
