@@ -43,6 +43,21 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
             return provider.FirstOrDefault();
         }
 
+        public async Task<Provider[]> GetProvidersAsync(long[] ukprns, CancellationToken cancellationToken)
+        {
+            var message = _messageBuilder.BuildMessageToGetSpecificUkprns(ukprns);
+
+            var request = new RestRequest(Method.POST);
+            request.AddParameter("text/xml", message, ParameterType.RequestBody);
+            request.AddHeader("SOAPAction", "retrieveAllProviders");
+
+            var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
+            var result = EnsureSuccessResponseAndExtractResult(response);
+
+            var providers = MapProvidersFromSoapResult(result);
+            return providers;
+        }
+
         public async Task<Provider[]> GetProvidersUpdatedSinceAsync(DateTime updatedSince, CancellationToken cancellationToken)
         {
             var message = _messageBuilder.BuildMessageToGetUpdatesSince(updatedSince);
