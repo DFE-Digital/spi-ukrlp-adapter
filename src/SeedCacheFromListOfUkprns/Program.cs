@@ -8,11 +8,8 @@ using CommandLine;
 using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.UkrlpAdapter.Domain.Cache;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
-using Dfe.Spi.UkrlpAdapter.Domain.Mapping;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
 using Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache;
-using Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping;
-using Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator;
 using Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi;
 using RestSharp;
 

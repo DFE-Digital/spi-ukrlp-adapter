@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp2.2</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CommandLineParser" Version="2.6.0" />
+        <PackageReference Include="Dfe.Spi.Common.Http.Server" Version="1.0.14" />
+        <PackageReference Include="Dfe.Spi.Common.Logging" Version="1.1.1" />
+        <PackageReference Include="Dfe.Spi.Common.WellKnownIdentifiers" Version="1.0.2" />
+        <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Domain\Dfe.Spi.UkrlpAdapter.Domain.csproj" />
+      <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage\Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.csproj" />
+      <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping\Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.csproj" />
+      <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator.csproj" />
+    </ItemGroup>
+
+</Project>
