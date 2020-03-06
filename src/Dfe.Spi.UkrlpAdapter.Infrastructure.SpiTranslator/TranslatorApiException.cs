@@ -5,8 +5,8 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
 {
     public class TranslatorApiException : Exception
     {
-        public TranslatorApiException(string resource, HttpStatusCode statusCode, string details)
-            : base($"Error calling {resource} on translator. Status {(int)statusCode} - {details}")
+        public TranslatorApiException(string resource, HttpStatusCode statusCode, string details, Exception exception)
+            : base($"Error calling {resource} on translator. Status {(int)statusCode} - {details}", exception)
         {
             StatusCode = statusCode;
             Details = details;
