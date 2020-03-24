@@ -1,4 +1,6 @@
 using System.IO;
+using Dfe.Spi.Common.Caching;
+using Dfe.Spi.Common.Caching.Definitions;
 using Dfe.Spi.Common.Context.Definitions;
 using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.Common.Http.Server.Definitions;
@@ -26,6 +28,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using RestSharp;
+using CacheManager = Dfe.Spi.UkrlpAdapter.Application.Cache.CacheManager;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace Dfe.Spi.UkrlpAdapter.Functions
@@ -55,6 +58,9 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
             AddMapping(services);
             AddCache(services);
             AddManagers(services);
+
+            services
+                .AddSingleton<ICacheProvider, CacheProvider>();
         }
 
         private void LoadAndAddConfiguration(IServiceCollection services)
