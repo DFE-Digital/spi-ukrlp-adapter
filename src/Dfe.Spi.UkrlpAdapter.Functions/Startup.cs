@@ -87,7 +87,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions
             services.AddLogging();
             services.AddScoped(typeof(ILogger<>), typeof(Logger<>));
             services.AddScoped<ILogger>(provider =>
-                provider.GetService<ILoggerFactory>().CreateLogger(LogCategories.CreateFunctionUserCategory("Common")));
+                provider.GetService<ILoggerFactory>().CreateLogger(LogCategories.CreateFunctionUserCategory("UkrlpAdapter")));
             services.AddScoped<ILoggerWrapper, LoggerWrapper>();
         }
 

@@ -61,7 +61,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
                 kvp.Value.Any(v => v.Equals(sourceValue, StringComparison.InvariantCultureIgnoreCase))).Key;
             if (string.IsNullOrEmpty(mapping))
             {
-                _logger.Info($"No enum mapping found for UKRLP for {enumName} with value {sourceValue}");
+                _logger.Warning($"No enum mapping found for UKRLP for {enumName} with value {sourceValue}");
                 return null;
             }
             
@@ -135,7 +135,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
                     response.ErrorException);
             }
 
-            _logger.Info($"Received {response.Content}");
+            _logger.Debug($"Received {response.Content}");
             var translationResponse = JsonConvert.DeserializeObject<TranslationResponse>(response.Content);
             return translationResponse.MappingsResult.Mappings;
         }

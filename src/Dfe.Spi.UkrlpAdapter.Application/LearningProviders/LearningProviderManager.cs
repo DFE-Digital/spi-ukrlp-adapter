@@ -46,10 +46,10 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
             {
                 return null;
             }
-            _logger.Info($"read provider {ukprn}: {JsonConvert.SerializeObject(provider)}");
+            _logger.Debug($"read provider {ukprn}: {JsonConvert.SerializeObject(provider)}");
 
             var learningProvider = await _mapper.MapAsync<LearningProvider>(provider, cancellationToken);
-            _logger.Info($"mapped provider {ukprn} to {JsonConvert.SerializeObject(learningProvider)}");
+            _logger.Debug($"mapped provider {ukprn} to {JsonConvert.SerializeObject(learningProvider)}");
 
             // If the fields are specified, then limit them... otherwise,
             // just return everything.
@@ -74,7 +74,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
                         .ToDictionary(x => x.Key, x => x.Value);
                 }
 
-                _logger.Info(
+                _logger.Debug(
                     $"Pruned mapped establishment: {learningProvider}.");
             }
             else
