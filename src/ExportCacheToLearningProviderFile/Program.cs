@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
+using Dfe.Spi.Common.Caching;
 using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.Models.Entities;
 using Dfe.Spi.UkrlpAdapter.Domain.Cache;
@@ -57,6 +58,7 @@ namespace ExportCacheToLearningProviderFile
                     TokenEndpoint = options.TokenEndpoint,
                 },
                 new RestClient(),
+                new CacheProvider(), 
                 new TranslatorConfiguration
                 {
                     BaseUrl = options.TranslatorBaseUrl,

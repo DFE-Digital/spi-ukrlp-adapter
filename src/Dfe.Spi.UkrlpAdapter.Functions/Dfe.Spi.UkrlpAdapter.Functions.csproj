@@ -4,6 +4,7 @@
         <AzureFunctionsVersion>v2</AzureFunctionsVersion>
     </PropertyGroup>
     <ItemGroup>
+        <PackageReference Include="Dfe.Spi.Common.Caching" Version="1.1.0" />
         <PackageReference Include="Dfe.Spi.Common.Http.Server" Version="1.0.14" />
         <PackageReference Include="Dfe.Spi.Common.Logging" Version="1.1.1" />
         <PackageReference Include="Dfe.Spi.Models" Version="1.0.16" />

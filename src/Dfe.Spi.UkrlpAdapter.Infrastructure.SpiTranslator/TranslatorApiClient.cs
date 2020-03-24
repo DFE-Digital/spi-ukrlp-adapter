@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Caching.Definitions;
 using Dfe.Spi.Common.Context.Definitions;
 using Dfe.Spi.Common.Context.Models;
 using Dfe.Spi.Common.Http.Client;
@@ -11,7 +12,6 @@ using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
 using Dfe.Spi.UkrlpAdapter.Domain.Translation;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using RestSharp;
 
 namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
@@ -19,14 +19,15 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
     public class TranslatorApiClient : ITranslator
     {
         private readonly IRestClient _restClient;
+        private readonly ICacheProvider _cacheProvider;
         private readonly ILoggerWrapper _logger;
         private readonly OAuth2ClientCredentialsAuthenticator _oAuth2ClientCredentialsAuthenticator;
         private readonly ISpiExecutionContextManager _spiExecutionContextManager;
-        private readonly Dictionary<string, Dictionary<string, string[]>> _cache;
 
         public TranslatorApiClient(
             AuthenticationConfiguration authenticationConfiguration,
             IRestClient restClient,
+            ICacheProvider cacheProvider,
             TranslatorConfiguration configuration,
             ILoggerWrapper logger,
             ISpiExecutionContextManager spiExecutionContextManager)
@@ -39,6 +40,8 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
                     new Parameter("Ocp-Apim-Subscription-Key", configuration.SubscriptionKey, ParameterType.HttpHeader));
             }
             
+            _cacheProvider = cacheProvider;
+            
             _logger = logger;
 
             _oAuth2ClientCredentialsAuthenticator = new OAuth2ClientCredentialsAuthenticator(
@@ -48,8 +51,6 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
                 authenticationConfiguration.Resource);
 
             _spiExecutionContextManager = spiExecutionContextManager;
-
-            _cache = new Dictionary<string, Dictionary<string, string[]>>();
         }
 
         public async Task<string> TranslateEnumValue(string enumName, string sourceValue,
@@ -60,7 +61,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
                 kvp.Value.Any(v => v.Equals(sourceValue, StringComparison.InvariantCultureIgnoreCase))).Key;
             if (string.IsNullOrEmpty(mapping))
             {
-                _logger.Info($"No enum mapping found for GIAS for {enumName} with value {sourceValue}");
+                _logger.Warning($"No enum mapping found for UKRLP for {enumName} with value {sourceValue}");
                 return null;
             }
             
@@ -72,13 +73,18 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
             CancellationToken cancellationToken)
         {
             var cacheKey = $"{enumName}:{sourceValue}";
-            if (_cache.ContainsKey(cacheKey))
+            
+            var cached = (Dictionary<string, string[]>)(await _cacheProvider.GetCacheItemAsync(cacheKey, cancellationToken));
+            if (cached != null)
             {
-                return _cache[cacheKey];
+                return cached;
             }
 
             var mappings = await GetMappingsFromApi(enumName, sourceValue, cancellationToken);
-            _cache.Add(cacheKey, mappings);
+
+            await _cacheProvider.AddCacheItemAsync(cacheKey, mappings,
+                new TimeSpan(0, 1, 0), cancellationToken);
+            
             return mappings;
         }
 
@@ -129,7 +135,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
                     response.ErrorException);
             }
 
-            _logger.Info($"Received {response.Content}");
+            _logger.Debug($"Received {response.Content}");
             var translationResponse = JsonConvert.DeserializeObject<TranslationResponse>(response.Content);
             return translationResponse.MappingsResult.Mappings;
         }
