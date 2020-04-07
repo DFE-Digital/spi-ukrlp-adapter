@@ -2,8 +2,10 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
+using Dfe.Spi.Common.Models;
 using Dfe.Spi.Common.UnitTesting.Fixtures;
 using Dfe.Spi.Models.Entities;
 using Dfe.Spi.UkrlpAdapter.Application.LearningProviders;
@@ -71,7 +73,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldReturnBadRequestResultIfArgumentExceptionThrown(string message)
+        public async Task ThenItShouldReturnBadRequestIfArgumentExceptionThrown(string message)
         {
             _learningProviderManagerMock.Setup(x =>
                     x.GetLearningProviderAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
@@ -81,8 +83,10 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
                 _cancellationToken);
 
             Assert.IsNotNull(actual);
-            Assert.IsInstanceOf<BadRequestObjectResult>(actual);
-            Assert.AreSame(message, ((BadRequestObjectResult) actual).Value);
+            Assert.IsInstanceOf<HttpErrorBodyResult>(actual);
+            Assert.IsInstanceOf<HttpErrorBody>(((HttpErrorBodyResult) actual).Value);
+            Assert.AreSame(message, ((HttpErrorBody)((HttpErrorBodyResult) actual).Value).Message);
+            Assert.AreSame("SPI-UKRLP-PROV01", ((HttpErrorBody)((HttpErrorBodyResult) actual).Value).ErrorIdentifier);
         }
     }
 }

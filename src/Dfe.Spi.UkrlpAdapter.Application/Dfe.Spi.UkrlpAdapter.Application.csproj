@@ -5,9 +5,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Dfe.Spi.Common.Extensions" Version="1.0.1" />
+      <PackageReference Include="Dfe.Spi.Common.Extensions" Version="1.1.1" />
       <PackageReference Include="Dfe.Spi.Common.Logging" Version="1.1.1" />
-      <PackageReference Include="Dfe.Spi.Models" Version="1.0.16" />
+      <PackageReference Include="Dfe.Spi.Models" Version="1.3.1" />
       <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     </ItemGroup>
 
