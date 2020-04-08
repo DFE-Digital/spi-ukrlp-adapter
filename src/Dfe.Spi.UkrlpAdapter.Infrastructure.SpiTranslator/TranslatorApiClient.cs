@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Caching.Definitions;
 using Dfe.Spi.Common.Context.Definitions;
 using Dfe.Spi.Common.Context.Models;
 using Dfe.Spi.Common.Http.Client;
@@ -9,7 +11,7 @@ using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
 using Dfe.Spi.UkrlpAdapter.Domain.Translation;
-using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using RestSharp;
 
 namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
@@ -17,6 +19,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
     public class TranslatorApiClient : ITranslator
     {
         private readonly IRestClient _restClient;
+        private readonly ICacheProvider _cacheProvider;
         private readonly ILoggerWrapper _logger;
         private readonly OAuth2ClientCredentialsAuthenticator _oAuth2ClientCredentialsAuthenticator;
         private readonly ISpiExecutionContextManager _spiExecutionContextManager;
@@ -24,6 +27,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
         public TranslatorApiClient(
             AuthenticationConfiguration authenticationConfiguration,
             IRestClient restClient,
+            ICacheProvider cacheProvider,
             TranslatorConfiguration configuration,
             ILoggerWrapper logger,
             ISpiExecutionContextManager spiExecutionContextManager)
@@ -35,6 +39,8 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
                 _restClient.DefaultParameters.Add(
                     new Parameter("Ocp-Apim-Subscription-Key", configuration.SubscriptionKey, ParameterType.HttpHeader));
             }
+            
+            _cacheProvider = cacheProvider;
             
             _logger = logger;
 
@@ -50,12 +56,47 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
         public async Task<string> TranslateEnumValue(string enumName, string sourceValue,
             CancellationToken cancellationToken)
         {
+            var mappings = await GetMappings(enumName, sourceValue, cancellationToken);
+            var mapping = mappings.FirstOrDefault(kvp =>
+                kvp.Value.Any(v => v.Equals(sourceValue, StringComparison.InvariantCultureIgnoreCase))).Key;
+            if (string.IsNullOrEmpty(mapping))
+            {
+                _logger.Warning($"No enum mapping found for UKRLP for {enumName} with value {sourceValue}");
+                return null;
+            }
+            
+            _logger.Debug($"Found mapping of {mapping} for {enumName} with value {sourceValue}");
+            return mapping;
+        }
+
+        private async Task<Dictionary<string, string[]>> GetMappings(string enumName, string sourceValue,
+            CancellationToken cancellationToken)
+        {
+            var cacheKey = $"{enumName}:{sourceValue}";
+            
+            var cached = (Dictionary<string, string[]>)(await _cacheProvider.GetCacheItemAsync(cacheKey, cancellationToken));
+            if (cached != null)
+            {
+                return cached;
+            }
+
+            var mappings = await GetMappingsFromApi(enumName, sourceValue, cancellationToken);
+
+            await _cacheProvider.AddCacheItemAsync(cacheKey, mappings,
+                new TimeSpan(0, 1, 0), cancellationToken);
+            
+            return mappings;
+        }
+
+        private async Task<Dictionary<string, string[]>> GetMappingsFromApi(string enumName, string sourceValue,
+            CancellationToken cancellationToken)
+        {
             var resource = $"enumerations/{enumName}/{SourceSystemNames.UkRegisterOfLearningProviders}";
             _logger.Info($"Calling {resource} on translator api");
             var request = new RestRequest(resource, Method.GET);
 
             SpiExecutionContext spiExecutionContext =
-               _spiExecutionContextManager.SpiExecutionContext;
+                _spiExecutionContextManager.SpiExecutionContext;
 
             request.AppendContext(spiExecutionContext);
 
@@ -87,25 +128,26 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
             if (!response.IsSuccessful)
             {
-                throw new TranslatorApiException(resource, response.StatusCode, response.Content);
+                throw new TranslatorApiException(
+                    resource,
+                    response.StatusCode,
+                    response.Content,
+                    response.ErrorException);
             }
 
-            _logger.Info($"Received {response.Content}");
-            var root = JObject.Parse(response.Content);
-            var mappingsResult = (JObject) root["mappingsResult"];
-            var mappings = (JObject) mappingsResult["mappings"];
-            var mapping = mappings.Properties()
-                .FirstOrDefault(p =>
-                    ((JArray) p.Value).Any(i =>
-                        ((string) i).Equals(sourceValue, StringComparison.InvariantCultureIgnoreCase)));
-            if (mapping == null)
-            {
-                _logger.Info($"No enum mapping found for {SourceSystemNames.UkRegisterOfLearningProviders} for {enumName} with value {sourceValue}");
-                return null;
-            }
-            
-            _logger.Debug($"Found mapping of {mapping.Name} for {enumName} with value {sourceValue}");
-            return mapping.Name;
+            _logger.Debug($"Received {response.Content}");
+            var translationResponse = JsonConvert.DeserializeObject<TranslationResponse>(response.Content);
+            return translationResponse.MappingsResult.Mappings;
         }
+    }
+
+    internal class TranslationResponse
+    {
+        public TranslationMappingsResult MappingsResult { get; set; }
+    }
+
+    internal class TranslationMappingsResult
+    {
+        public Dictionary<string, string[]> Mappings { get; set; }
     }
 }

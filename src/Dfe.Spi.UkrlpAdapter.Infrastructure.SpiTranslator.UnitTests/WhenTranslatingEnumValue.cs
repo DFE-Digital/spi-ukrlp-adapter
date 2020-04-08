@@ -2,6 +2,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.Caching.Definitions;
 using Dfe.Spi.Common.Context.Definitions;
 using Dfe.Spi.Common.Context.Models;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -18,6 +19,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator.UnitTests
     {
         private AuthenticationConfiguration _authenticationConfiguration;
         private Mock<IRestClient> _restClientMock;
+        private Mock<ICacheProvider> _cacheProviderMock;
         private TranslatorConfiguration _configuration;
         private Mock<ILoggerWrapper> _loggerMock;
         private TranslatorApiClient _translator;
@@ -44,6 +46,8 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator.UnitTests
                     Content = GetValidResponse("Value1", new[] {"Mapped1"})
                 });
 
+            _cacheProviderMock = new Mock<ICacheProvider>();
+
             _configuration = new TranslatorConfiguration
             {
                 BaseUrl = "https://translator.unit.tests",
@@ -58,6 +62,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator.UnitTests
             _translator = new TranslatorApiClient(
                 _authenticationConfiguration,
                 _restClientMock.Object,
+                _cacheProviderMock.Object,
                 _configuration,
                 _loggerMock.Object,
                 _spiExecutionContextManagerMock.Object);

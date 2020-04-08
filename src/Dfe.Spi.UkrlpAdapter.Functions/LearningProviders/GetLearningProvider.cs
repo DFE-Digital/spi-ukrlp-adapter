@@ -1,6 +1,8 @@
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.UkrlpAdapter.Application.LearningProviders;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +10,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Dfe.Spi.Common.Http.Server.Definitions;
+using Dfe.Spi.Common.Models;
 using Newtonsoft.Json;
 
 namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
@@ -64,8 +67,15 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
             }
             catch (ArgumentException ex)
             {
-                _logger.Info($"{FunctionName} returning bad request: {ex.Message}");
-                return new BadRequestObjectResult(ex.Message);
+                _logger.Info($"{FunctionName} returning bad request (id: {id}): {ex.Message}");
+                
+                return new HttpErrorBodyResult(
+                    new HttpErrorBody
+                    {
+                        StatusCode = HttpStatusCode.BadRequest,
+                        ErrorIdentifier = "SPI-UKRLP-PROV01",
+                        Message = ex.Message
+                    });
             }
         }
     }

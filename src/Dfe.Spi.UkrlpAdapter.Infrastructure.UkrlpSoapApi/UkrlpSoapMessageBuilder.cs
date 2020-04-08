@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
@@ -6,6 +7,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
     internal interface IUkrlpSoapMessageBuilder
     {
         string BuildMessageToGetSpecificUkprn(long ukprn);
+        string BuildMessageToGetSpecificUkprns(long[] ukprns);
         string BuildMessageToGetUpdatesSince(DateTime updatedSince);
     }
 
@@ -25,13 +27,18 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
 
         public string BuildMessageToGetSpecificUkprn(long ukprn)
         {
+            return BuildMessageToGetSpecificUkprns(new[] {ukprn});
+        }
+
+        public string BuildMessageToGetSpecificUkprns(long[] ukprns)
+        {
             var selectionCriteria = new XElement("SelectionCriteria",
                 new XElement("UnitedKingdomProviderReferenceNumberList",
-                    new XElement("UnitedKingdomProviderReferenceNumber", ukprn)),
+                    ukprns.Select(ukprn => new XElement("UnitedKingdomProviderReferenceNumber", ukprn))),
                 new XElement("CriteriaCondition", "OR"),
                 new XElement("ApprovedProvidersOnly", "No"),
                 new XElement("ProviderStatus", "A"));
-            
+
             var envelope = BuildEnvelope(selectionCriteria);
             return envelope.ToString();
         }
@@ -43,7 +50,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
                 new XElement("CriteriaCondition", "OR"),
                 new XElement("ApprovedProvidersOnly", "No"),
                 new XElement("ProviderStatus", "A"));
-            
+
             var envelope = BuildEnvelope(selectionCriteria);
             return envelope.ToString();
         }
@@ -61,7 +68,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
         private XElement BuildRequest(XElement selectionCriteria)
         {
             selectionCriteria.Add(new XElement("StakeholderId", _stakeholderId));
-            
+
             return new XElement(ukrlpNs + "ProviderQueryRequest",
                 selectionCriteria,
                 new XElement("QueryId", _queryId++));

@@ -58,7 +58,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
 
             // Store
             await _providerRepository.StoreInStagingAsync(providers, cancellationToken);
-            _logger.Info($"Stored {providers.Length} providers in staging");
+            _logger.Debug($"Stored {providers.Length} providers in staging");
 
             // Queue diff check
             var position = 0;

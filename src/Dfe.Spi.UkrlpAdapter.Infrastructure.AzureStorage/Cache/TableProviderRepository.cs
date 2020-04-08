@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -81,7 +82,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
 
         public async Task<Provider> GetProviderFromStagingAsync(long ukprn, CancellationToken cancellationToken)
         {
-            var operation = TableOperation.Retrieve<ProviderEntity>(GetStagingPartitionKey(ukprn),ukprn.ToString());
+            var operation = TableOperation.Retrieve<ProviderEntity>(GetStagingPartitionKey(ukprn), ukprn.ToString());
             var operationResult = await _table.ExecuteAsync(operation, cancellationToken);
             var entity = (ProviderEntity) operationResult.Result;
 
@@ -93,10 +94,17 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
             return JsonConvert.DeserializeObject<Provider>(entity.ProviderJson);
         }
 
+        public async Task<Provider[]> GetProvidersAsync(CancellationToken cancellationToken)
+        {
+            var query = new TableQuery<ProviderEntity>()
+                .Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, "current"));
+            var providers = await ExecuteQueryAsync(query, cancellationToken);
+            
+            return providers
+                .Where(entity => !string.IsNullOrEmpty(entity.ProviderJson))
+                .Select(entity => JsonConvert.DeserializeObject<Provider>(entity.ProviderJson)).ToArray();
+        }
 
-        
-        
-        
 
         private ProviderEntity ModelToCurrent(Provider provider)
         {
@@ -105,7 +113,8 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
 
         private ProviderEntity ModelToStaging(Provider provider)
         {
-            return ModelToEntity(GetStagingPartitionKey(provider.UnitedKingdomProviderReferenceNumber), provider.UnitedKingdomProviderReferenceNumber.ToString(), provider);
+            return ModelToEntity(GetStagingPartitionKey(provider.UnitedKingdomProviderReferenceNumber),
+                provider.UnitedKingdomProviderReferenceNumber.ToString(), provider);
         }
 
         private ProviderEntity ModelToEntity(string partitionKey, string rowKey, Provider provider)
@@ -117,10 +126,30 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
                 ProviderJson = JsonConvert.SerializeObject(provider),
             };
         }
-        
+
         private string GetStagingPartitionKey(long urn)
         {
             return $"staging{Math.Floor(urn / 5000d) * 5000}";
+        }
+
+        private async Task<T[]> ExecuteQueryAsync<T>(TableQuery<T> query, CancellationToken cancellationToken)
+            where T : TableEntity, new()
+        {
+            var nextQuery = query;
+            var continuationToken = default(TableContinuationToken);
+            var results = new List<T>();
+
+            do
+            {
+                var result =
+                    await _table.ExecuteQuerySegmentedAsync<T>(nextQuery, continuationToken, cancellationToken);
+                
+                results.AddRange(result.Results);
+
+                continuationToken = result.ContinuationToken;
+            } while (continuationToken != null && !cancellationToken.IsCancellationRequested);
+
+            return results.ToArray();
         }
     }
 }
