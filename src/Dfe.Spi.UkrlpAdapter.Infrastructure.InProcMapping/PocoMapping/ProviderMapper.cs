@@ -66,14 +66,11 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping
                 Website = primaryContact?.ContactWebsiteAddress,
                 TelephoneNumber = telephones.FirstOrDefault(t => !string.IsNullOrEmpty(t)),
                 ContactEmail = legalAddress?.ContactEmail ?? primaryContact?.ContactEmail,
-                Address = new Address()
-                {
-                    AddressLine1 = legalAddress?.ContactAddress?.Address1,
-                    AddressLine2 = legalAddress?.ContactAddress?.Address2,
-                    AddressLine3 = legalAddress?.ContactAddress?.Address3,
-                    Town = legalAddress?.ContactAddress?.Town,
-                    County = legalAddress?.ContactAddress?.County,
-                },
+                AddressLine1 = legalAddress?.ContactAddress?.Address1,
+                AddressLine2 = legalAddress?.ContactAddress?.Address2,
+                AddressLine3 = legalAddress?.ContactAddress?.Address3,
+                Town = legalAddress?.ContactAddress?.Town,
+                County = legalAddress?.ContactAddress?.County,
             };
 
             DateTime readDate = DateTime.UtcNow;
