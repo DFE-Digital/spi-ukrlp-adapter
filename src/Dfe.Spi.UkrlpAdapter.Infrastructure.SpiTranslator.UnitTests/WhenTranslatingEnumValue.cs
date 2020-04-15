@@ -41,9 +41,8 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator.UnitTests
             _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new RestResponse
                 {
-                    StatusCode = HttpStatusCode.OK,
+                    StatusCode = HttpStatusCode.NotFound,
                     ResponseStatus = ResponseStatus.Completed,
-                    Content = GetValidResponse("Value1", new[] {"Mapped1"})
                 });
 
             _cacheProviderMock = new Mock<ICacheProvider>();
@@ -73,11 +72,19 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator.UnitTests
         [Test, AutoData]
         public async Task ThenItShouldCallEnumEndpointForUkrlp(string enumName, string sourceValue)
         {
+            _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new RestResponse
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    ResponseStatus = ResponseStatus.Completed,
+                    Content = GetValidResponse(enumName, "Enum1", new[] {sourceValue})
+                });
+            
             await _translator.TranslateEnumValue(enumName, sourceValue, _cancellationToken);
 
             _restClientMock.Verify(c => c.ExecuteTaskAsync(It.Is<RestRequest>(r =>
                     r.Method == Method.GET &&
-                    r.Resource == $"enumerations/{enumName}/{SourceSystemNames.UkRegisterOfLearningProviders}"), _cancellationToken),
+                    r.Resource == $"adapters/{SourceSystemNames.UkRegisterOfLearningProviders}/mappings"), _cancellationToken),
                 Times.Once);
         }
 
@@ -90,7 +97,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator.UnitTests
                 {
                     StatusCode = HttpStatusCode.OK,
                     ResponseStatus = ResponseStatus.Completed,
-                    Content = GetValidResponse(sdmValue, new[] {sourceValue})
+                    Content = GetValidResponse(enumName, sdmValue, new[] {sourceValue})
                 });
 
             var actual = await _translator.TranslateEnumValue(enumName, sourceValue, _cancellationToken);
@@ -121,12 +128,14 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator.UnitTests
         }
 
 
-        private string GetValidResponse(string sdmValue, string[] mappings)
+        private string GetValidResponse(string enumName, string sdmValue, string[] mappings)
         {
             var obj = new JObject(
-                new JProperty("mappingsResult", new JObject(
-                    new JProperty("mappings", new JObject(
-                        new JProperty(sdmValue, new JArray(mappings)))))));
+                new JProperty(enumName,
+                    new JObject(
+                        new JProperty("mappings", new JObject(
+                            new JProperty(sdmValue, new JArray(mappings)))))));
+            
             return obj.ToString();
         }
     }
