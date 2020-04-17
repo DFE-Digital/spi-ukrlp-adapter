@@ -30,5 +30,9 @@
       <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator\Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator.csproj" />
       <ProjectReference Include="..\Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi\Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <None Remove="Schemas\get-learning-providers-body.json" />
+      <EmbeddedResource Include="Schemas\get-learning-providers-body.json" />
+    </ItemGroup>
     <ProjectExtensions><VisualStudio><UserProperties Properties_4launchSettings_1json__JSONSchema="" /></VisualStudio></ProjectExtensions>
 </Project>

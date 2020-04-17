@@ -14,7 +14,9 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
     public interface ILearningProviderManager
     {
         Task<LearningProvider> GetLearningProviderAsync(string id, string fields, CancellationToken cancellationToken);
+        Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, CancellationToken cancellationToken);
     }
+
     public class LearningProviderManager : ILearningProviderManager
     {
         private readonly IUkrlpApiClient _ukrlpApiClient;
@@ -46,17 +48,61 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
             {
                 return null;
             }
+
             _logger.Debug($"read provider {ukprn}: {JsonConvert.SerializeObject(provider)}");
 
+            var requestedFields = string.IsNullOrEmpty(fields) ? null : fields.Split(',').Select(x => x.Trim()).ToArray();
+
+            return await GetLearningProviderFromUkrlpProviderAsync(provider, requestedFields, cancellationToken);
+        }
+
+        public async Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, CancellationToken cancellationToken)
+        {
+            long[] ukprns = new long[ids.Length];
+            for (var i = 0; i < ids.Length; i++)
+            {
+                long ukprn;
+                if (!long.TryParse(ids[i], out ukprn))
+                {
+                    throw new ArgumentException($"id must be a number (ukprn) but received {ids[i]} at index {i}", nameof(ids));
+                }
+
+                if (ids[i].Length != 8)
+                {
+                    throw new ArgumentException($"UKPRN must be 8 digits but received {ids[i].Length} ({ids[i]}) at index {i}", nameof(ids));
+                }
+
+                ukprns[i] = ukprn;
+            }
+
+            var providers = await _ukrlpApiClient.GetProvidersAsync(ukprns, cancellationToken);
+            var learningProviders = new LearningProvider[providers.Length];
+
+            for (var i = 0; i < providers.Length; i++)
+            {
+                if (providers[i] == null)
+                {
+                    continue;
+                }
+
+                learningProviders[i] = await GetLearningProviderFromUkrlpProviderAsync(providers[i], fields, cancellationToken);
+            }
+
+            return learningProviders;
+        }
+
+
+        private async Task<LearningProvider> GetLearningProviderFromUkrlpProviderAsync(Provider provider, string[] requestedFields,
+            CancellationToken cancellationToken)
+        {
             var learningProvider = await _mapper.MapAsync<LearningProvider>(provider, cancellationToken);
-            _logger.Debug($"mapped provider {ukprn} to {JsonConvert.SerializeObject(learningProvider)}");
+            _logger.Debug($"mapped provider {provider.UnitedKingdomProviderReferenceNumber} to {JsonConvert.SerializeObject(learningProvider)}");
 
             // If the fields are specified, then limit them... otherwise,
             // just return everything.
-            if (!string.IsNullOrEmpty(fields))
+            if (requestedFields != null && requestedFields.Length > 0)
             {
                 // Then we need to limit the fields we send back...
-                string[] requestedFields = fields.Split(',');
                 string[] requestedFieldsUpper = requestedFields
                     .Select(x => x.ToUpperInvariant())
                     .ToArray();
