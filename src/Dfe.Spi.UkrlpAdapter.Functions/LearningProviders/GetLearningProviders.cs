@@ -64,11 +64,17 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
             {
                 return new JsonResult(
                     providers,
-                    JsonConvert.DefaultSettings());
+                    JsonConvert.DefaultSettings())
+                {
+                    StatusCode = 200,
+                };
             }
             else
             {
-                return new JsonResult(providers);
+                return new JsonResult(providers)
+                {
+                    StatusCode = 200,
+                };
             }
         }
     }

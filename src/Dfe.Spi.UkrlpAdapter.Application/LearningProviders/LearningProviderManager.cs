@@ -16,6 +16,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
         Task<LearningProvider> GetLearningProviderAsync(string id, string fields, CancellationToken cancellationToken);
         Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, CancellationToken cancellationToken);
     }
+
     public class LearningProviderManager : ILearningProviderManager
     {
         private readonly IUkrlpApiClient _ukrlpApiClient;
@@ -47,6 +48,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
             {
                 return null;
             }
+
             _logger.Debug($"read provider {ukprn}: {JsonConvert.SerializeObject(provider)}");
 
             var requestedFields = string.IsNullOrEmpty(fields) ? null : fields.Split(',').Select(x => x.Trim()).ToArray();
@@ -63,6 +65,11 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
                 if (!long.TryParse(ids[i], out ukprn))
                 {
                     throw new ArgumentException($"id must be a number (ukprn) but received {ids[i]} at index {i}", nameof(ids));
+                }
+
+                if (ids[i].Length != 8)
+                {
+                    throw new ArgumentException($"UKPRN must be 8 digits but received {ids[i].Length} ({ids[i]}) at index {i}", nameof(ids));
                 }
 
                 ukprns[i] = ukprn;
@@ -85,14 +92,15 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
         }
 
 
-        private async Task<LearningProvider> GetLearningProviderFromUkrlpProviderAsync(Provider provider, string[] requestedFields, CancellationToken cancellationToken)
+        private async Task<LearningProvider> GetLearningProviderFromUkrlpProviderAsync(Provider provider, string[] requestedFields,
+            CancellationToken cancellationToken)
         {
             var learningProvider = await _mapper.MapAsync<LearningProvider>(provider, cancellationToken);
             _logger.Debug($"mapped provider {provider.UnitedKingdomProviderReferenceNumber} to {JsonConvert.SerializeObject(learningProvider)}");
 
             // If the fields are specified, then limit them... otherwise,
             // just return everything.
-            if (requestedFields!=null && requestedFields.Length > 0)
+            if (requestedFields != null && requestedFields.Length > 0)
             {
                 // Then we need to limit the fields we send back...
                 string[] requestedFieldsUpper = requestedFields
