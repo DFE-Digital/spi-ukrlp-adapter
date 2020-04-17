@@ -1,9 +1,12 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
+using Dfe.Spi.Common.Models;
 using Dfe.Spi.UkrlpAdapter.Application.LearningProviders;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -15,22 +18,19 @@ using Newtonsoft.Json;
 
 namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
 {
-    public class GetLearningProviders
+    public class GetLearningProviders : FunctionsBase<GetLearningProvidersRequest>
     {
         private const string FunctionName = nameof(GetLearningProviders);
 
         private readonly ILearningProviderManager _learningProviderManager;
-        private readonly IHttpSpiExecutionContextManager _httpSpiExecutionContextManager;
-        private readonly ILoggerWrapper _logger;
 
         public GetLearningProviders(
             ILearningProviderManager learningProviderManager, 
             IHttpSpiExecutionContextManager httpSpiExecutionContextManager, 
             ILoggerWrapper logger)
+            : base(httpSpiExecutionContextManager, logger)
         {
             _learningProviderManager = learningProviderManager;
-            _httpSpiExecutionContextManager = httpSpiExecutionContextManager;
-            _logger = logger;
         }
         
         [FunctionName(FunctionName)]
@@ -39,25 +39,27 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
             HttpRequest req,
             CancellationToken cancellationToken)
         {
-            _httpSpiExecutionContextManager.SetContext(req.Headers);
-            _logger.Info($"{FunctionName} triggered at {DateTime.Now}");
+            return await ValidateAndRunAsync(req, null, cancellationToken);
+        }
 
-            // Read request
-            string json;
-            using (var reader = new StreamReader(req.Body))
-            {
-                json = await reader.ReadToEndAsync();
-            }
-            _logger.Debug($"{FunctionName} read json {json} from body");
-            
-            // Deserialize it
-            var request = JsonConvert.DeserializeObject<GetLearningProvidersRequest>(json);
-            _logger.Debug($"Deserialized request to {JsonConvert.SerializeObject(request)}");
-            
-            // Get the results
+        protected override HttpErrorBodyResult GetMalformedErrorResponse(FunctionRunContext runContext)
+        {
+            return new HttpErrorBodyResult(
+                HttpStatusCode.BadRequest,
+                Errors.GetLearningProvidersMalformedRequest.Code,
+                Errors.GetLearningProvidersMalformedRequest.Message);
+        }
+
+        protected override HttpErrorBodyResult GetSchemaValidationResponse(JsonSchemaValidationException validationException, FunctionRunContext runContext)
+        {
+            return new HttpSchemaValidationErrorBodyResult(Errors.GetLearningProvidersSchemaValidation.Code, validationException);
+        }
+
+        protected override async Task<IActionResult> ProcessWellFormedRequestAsync(GetLearningProvidersRequest request, FunctionRunContext runContext,
+            CancellationToken cancellationToken)
+        {
             var providers = await _learningProviderManager.GetLearningProvidersAsync(request.Identifiers, request.Fields, cancellationToken);
             
-            // Return
             if (JsonConvert.DefaultSettings != null)
             {
                 return new JsonResult(
@@ -71,7 +73,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
         }
     }
 
-    public class GetLearningProvidersRequest
+    public class GetLearningProvidersRequest : RequestResponseBase
     {
         public string[] Identifiers { get; set; }
         public string[] Fields { get; set; }
