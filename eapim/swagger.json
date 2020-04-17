@@ -7,6 +7,57 @@
   },
   "host": "__function_app_host__",
   "paths": {
+    "/learning-providers": {
+      "post": {
+        "description": "Returns an array of learning providers, based on the supplied ids.",
+        "operationId": "get-learning-providers",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "request",
+            "description": "The identifiers and fields to use",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/batch-retrieve-request"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "description": "Bearer token authentication.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-Internal-Request-Id",
+            "type": "string",
+            "description": "An internal request id. Should be a vaild guid.",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "X-External-Request-Id",
+            "description": "An optional external request id. Used in logging.",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The learning provider exists, and is part of the body of the response.",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "No learning provider exists for the given id.",
+            "schema": {
+              "$ref": "#/definitions/http-error-body"
+            }
+          }
+        }
+      }
+    },
     "/learning-providers/{id}": {
       "get": {
         "description": "Returns a single learning provider, based on its id.",
@@ -78,6 +129,25 @@
     }
   },
   "definitions": {
+    "batch-retrieve-request": {
+      "type": "object",
+      "properties": {
+        "identifiers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["identifiers"]
+    },
     "http-error-body": {
       "type": "object",
       "properties": {
