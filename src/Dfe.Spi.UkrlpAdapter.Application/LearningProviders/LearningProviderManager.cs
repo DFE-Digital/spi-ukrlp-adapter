@@ -58,7 +58,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
 
         public async Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, CancellationToken cancellationToken)
         {
-            long[] ukprns = new long[ids.Length];
+            var ukprns = new long[ids.Length];
             for (var i = 0; i < ids.Length; i++)
             {
                 long ukprn;
@@ -76,16 +76,17 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
             }
 
             var providers = await _ukrlpApiClient.GetProvidersAsync(ukprns, cancellationToken);
-            var learningProviders = new LearningProvider[providers.Length];
-
-            for (var i = 0; i < providers.Length; i++)
+            
+            var learningProviders = new LearningProvider[ukprns.Length];
+            for (var i = 0; i < ukprns.Length; i++)
             {
-                if (providers[i] == null)
+                var provider = providers.SingleOrDefault(p => p.UnitedKingdomProviderReferenceNumber == ukprns[i]);
+                if (provider == null)
                 {
                     continue;
                 }
-
-                learningProviders[i] = await GetLearningProviderFromUkrlpProviderAsync(providers[i], fields, cancellationToken);
+            
+                learningProviders[i] = await GetLearningProviderFromUkrlpProviderAsync(provider, fields, cancellationToken);
             }
 
             return learningProviders;
