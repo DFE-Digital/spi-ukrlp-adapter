@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Dfe.Spi.Common.Extensions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Models.Entities;
+using Dfe.Spi.UkrlpAdapter.Domain.Cache;
 using Dfe.Spi.UkrlpAdapter.Domain.Mapping;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
 using Newtonsoft.Json;
@@ -13,24 +14,30 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
 {
     public interface ILearningProviderManager
     {
-        Task<LearningProvider> GetLearningProviderAsync(string id, string fields, CancellationToken cancellationToken);
-        Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, CancellationToken cancellationToken);
+        Task<LearningProvider> GetLearningProviderAsync(string id, string fields, bool readFromLive, CancellationToken cancellationToken);
+        Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, CancellationToken cancellationToken);
     }
 
     public class LearningProviderManager : ILearningProviderManager
     {
         private readonly IUkrlpApiClient _ukrlpApiClient;
+        private readonly IProviderRepository _providerRepository;
         private readonly IMapper _mapper;
         private readonly ILoggerWrapper _logger;
 
-        public LearningProviderManager(IUkrlpApiClient ukrlpApiClient, IMapper mapper, ILoggerWrapper logger)
+        public LearningProviderManager(
+            IUkrlpApiClient ukrlpApiClient, 
+            IProviderRepository providerRepository,
+            IMapper mapper, 
+            ILoggerWrapper logger)
         {
             _ukrlpApiClient = ukrlpApiClient;
+            _providerRepository = providerRepository;
             _mapper = mapper;
             _logger = logger;
         }
 
-        public async Task<LearningProvider> GetLearningProviderAsync(string id, string fields, CancellationToken cancellationToken)
+        public async Task<LearningProvider> GetLearningProviderAsync(string id, string fields, bool readFromLive, CancellationToken cancellationToken)
         {
             long ukprn;
             if (!long.TryParse(id, out ukprn))
@@ -43,7 +50,9 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
                 throw new ArgumentException($"UKPRN must be 8 digits but received {id.Length} ({id})");
             }
 
-            var provider = await _ukrlpApiClient.GetProviderAsync(ukprn, cancellationToken);
+            var provider = readFromLive
+                ? await _ukrlpApiClient.GetProviderAsync(ukprn, cancellationToken)
+                : await _providerRepository.GetProviderAsync(ukprn, cancellationToken);
             if (provider == null)
             {
                 return null;
@@ -56,7 +65,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
             return await GetLearningProviderFromUkrlpProviderAsync(provider, requestedFields, cancellationToken);
         }
 
-        public async Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, CancellationToken cancellationToken)
+        public async Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, CancellationToken cancellationToken)
         {
             var ukprns = new long[ids.Length];
             for (var i = 0; i < ids.Length; i++)
@@ -75,7 +84,9 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
                 ukprns[i] = ukprn;
             }
 
-            var providers = await _ukrlpApiClient.GetProvidersAsync(ukprns, cancellationToken);
+            var providers = readFromLive
+                ? await _ukrlpApiClient.GetProvidersAsync(ukprns, cancellationToken)
+                : await _providerRepository.GetProvidersAsync(ukprns, cancellationToken);
             
             var learningProviders = new LearningProvider[ukprns.Length];
             for (var i = 0; i < ukprns.Length; i++)
