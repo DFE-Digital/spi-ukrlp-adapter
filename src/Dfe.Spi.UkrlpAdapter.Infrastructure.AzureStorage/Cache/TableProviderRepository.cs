@@ -94,6 +94,21 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
             return JsonConvert.DeserializeObject<Provider>(entity.ProviderJson);
         }
 
+        public async Task<Provider[]> GetProvidersAsync(long[] ukprns, CancellationToken cancellationToken)
+        {
+            var ukprnFilters = ukprns
+                .Select(ukprn => $"PartitionKey eq '{ukprn}'")
+                .Aggregate((x, y) => $"{x} or {y}");
+            var filter = $"RowKey eq 'current' and ({ukprnFilters})";
+            var query = new TableQuery<ProviderEntity>()
+                .Where(filter);
+            var providers = await ExecuteQueryAsync(query, cancellationToken);
+            
+            return providers
+                .Where(entity => !string.IsNullOrEmpty(entity.ProviderJson))
+                .Select(entity => JsonConvert.DeserializeObject<Provider>(entity.ProviderJson)).ToArray();
+        }
+
         public async Task<Provider[]> GetProvidersAsync(CancellationToken cancellationToken)
         {
             var query = new TableQuery<ProviderEntity>()

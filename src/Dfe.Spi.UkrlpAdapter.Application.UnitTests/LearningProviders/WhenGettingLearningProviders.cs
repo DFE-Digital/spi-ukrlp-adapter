@@ -8,6 +8,7 @@ using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.UnitTesting.Fixtures;
 using Dfe.Spi.Models.Entities;
 using Dfe.Spi.UkrlpAdapter.Application.LearningProviders;
+using Dfe.Spi.UkrlpAdapter.Domain.Cache;
 using Dfe.Spi.UkrlpAdapter.Domain.Mapping;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
 using Moq;
@@ -19,6 +20,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
     {
         private Fixture _fixture;
         private Mock<IUkrlpApiClient> _ukrlpApiClientMock;
+        private Mock<IProviderRepository> _providerRepository;
         private Mock<IMapper> _mapperMock;
         private Mock<ILoggerWrapper> _loggerMock;
         private LearningProviderManager _manager;
@@ -30,48 +32,76 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
             var random = new Random();
             _fixture = new Fixture();
             _fixture.Register(() => (long) random.Next(10000000, 99999999));
+            _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
+                .ForEach(b => _fixture.Behaviors.Remove(b));
+            _fixture.Behaviors.Add(new OmitOnRecursionBehavior()); // recursionDepth
 
             _ukrlpApiClientMock = new Mock<IUkrlpApiClient>();
+
+            _providerRepository = new Mock<IProviderRepository>();
 
             _mapperMock = new Mock<IMapper>();
 
             _loggerMock = new Mock<ILoggerWrapper>();
 
-            _manager = new LearningProviderManager(_ukrlpApiClientMock.Object, _mapperMock.Object, _loggerMock.Object);
+            _manager = new LearningProviderManager(
+                _ukrlpApiClientMock.Object,
+                _providerRepository.Object,
+                _mapperMock.Object,
+                _loggerMock.Object);
 
             _cancellationToken = new CancellationToken();
         }
 
         [Test]
-        public async Task ThenItShouldGetProvidersFromApi()
+        public async Task ThenItShouldGetProvidersFromApiIfReadFromLive()
         {
             var ukprns = _fixture.Create<long[]>();
-            
-            await _manager.GetLearningProvidersAsync(ukprns.Select(x => x.ToString()).ToArray(), null, _cancellationToken);
+
+            await _manager.GetLearningProvidersAsync(ukprns.Select(x => x.ToString()).ToArray(), null, true, _cancellationToken);
 
             _ukrlpApiClientMock.Verify(c => c.GetProvidersAsync(
                     It.Is<long[]>(x => x.Length == ukprns.Length), _cancellationToken),
                 Times.Once);
+            _providerRepository.Verify(c => c.GetProvidersAsync(It.IsAny<long[]>(), It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         [Test]
-        public void ThenItShouldThrowExceptionIfAnIdIsNotNumeric()
+        public async Task ThenItShouldGetProvidersFromCacheIfNotReadFromLive()
+        {
+            var ukprns = _fixture.Create<long[]>();
+
+            await _manager.GetLearningProvidersAsync(ukprns.Select(x => x.ToString()).ToArray(), null, false, _cancellationToken);
+
+            _providerRepository.Verify(c => c.GetProvidersAsync(
+                    It.Is<long[]>(x => x.Length == ukprns.Length), _cancellationToken),
+                Times.Once);
+            _ukrlpApiClientMock.Verify(c => c.GetProvidersAsync(It.IsAny<long[]>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void ThenItShouldThrowExceptionIfAnIdIsNotNumeric(bool readFromLive)
         {
             var ids = new[] {"12345678", "NotANumber", "98765432"};
             Assert.ThrowsAsync<ArgumentException>(async () =>
-                await _manager.GetLearningProvidersAsync(ids, null, _cancellationToken));
+                await _manager.GetLearningProvidersAsync(ids, null, readFromLive, _cancellationToken));
         }
 
-        [Test]
-        public void ThenItShouldThrowExceptionIfIdIsNot8Digits()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void ThenItShouldThrowExceptionIfIdIsNot8Digits(bool readFromLive)
         {
             var ids = new[] {"12345678", "123456789", "98765432"};
             Assert.ThrowsAsync<ArgumentException>(async () =>
-                await _manager.GetLearningProvidersAsync(ids, null, _cancellationToken));
+                await _manager.GetLearningProvidersAsync(ids, null, readFromLive, _cancellationToken));
         }
 
-        [Test]
-        public async Task ThenItShouldMapProvidersToLearningProviders()
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task ThenItShouldMapProvidersToLearningProviders(bool readFromLive)
         {
             var ukprns = _fixture.Create<long[]>();
             var providers = ukprns
@@ -83,8 +113,10 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
 
             _ukrlpApiClientMock.Setup(c => c.GetProvidersAsync(It.IsAny<long[]>(), _cancellationToken))
                 .ReturnsAsync(providers);
+            _providerRepository.Setup(c => c.GetProvidersAsync(It.IsAny<long[]>(), _cancellationToken))
+                .ReturnsAsync(providers);
 
-            await _manager.GetLearningProvidersAsync(ids, null, _cancellationToken);
+            await _manager.GetLearningProvidersAsync(ids, null, readFromLive, _cancellationToken);
 
             _mapperMock.Verify(m => m.MapAsync<LearningProvider>(It.IsAny<Provider>(), _cancellationToken),
                 Times.Exactly(providers.Length));
@@ -95,8 +127,9 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
             }
         }
 
-        [Test]
-        public async Task ThenItShouldReturnMappedLearningProviders()
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task ThenItShouldReturnMappedLearningProviders(bool readFromLive)
         {
             var ukprns = _fixture.Create<long[]>();
             var learningProviders = ukprns
@@ -110,10 +143,13 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
                 .ToArray();
             _ukrlpApiClientMock.Setup(c => c.GetProvidersAsync(It.IsAny<long[]>(), _cancellationToken))
                 .ReturnsAsync(providers);
+            _providerRepository.Setup(c => c.GetProvidersAsync(It.IsAny<long[]>(), _cancellationToken))
+                .ReturnsAsync(providers);
             _mapperMock.Setup(m => m.MapAsync<LearningProvider>(It.IsAny<Provider>(), _cancellationToken))
-                .ReturnsAsync((Provider provider, CancellationToken ct) => learningProviders.Single(x => x.Ukprn == provider.UnitedKingdomProviderReferenceNumber));
+                .ReturnsAsync((Provider provider, CancellationToken ct) =>
+                    learningProviders.Single(x => x.Ukprn == provider.UnitedKingdomProviderReferenceNumber));
 
-            var actual = await _manager.GetLearningProvidersAsync(ids, null, _cancellationToken);
+            var actual = await _manager.GetLearningProvidersAsync(ids, null, readFromLive, _cancellationToken);
 
             Assert.AreEqual(learningProviders.Length, actual.Length);
             for (var i = 0; i < learningProviders.Length; i++)
@@ -123,8 +159,9 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
             }
         }
 
-        [Test]
-        public async Task ThenItShouldReturnArrayOfSameSizeWithNullsIfNotAllProvidersCanBeFound()
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task ThenItShouldReturnArrayOfSameSizeWithNullsIfNotAllProvidersCanBeFound(bool readFromLive)
         {
             var ukprns = new[] {_fixture.Create<long>(), _fixture.Create<long>(), _fixture.Create<long>()};
             var providers = new[]
@@ -140,10 +177,13 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
                 .ToArray();
             _ukrlpApiClientMock.Setup(c => c.GetProvidersAsync(It.IsAny<long[]>(), _cancellationToken))
                 .ReturnsAsync(providers);
+            _providerRepository.Setup(c => c.GetProvidersAsync(It.IsAny<long[]>(), _cancellationToken))
+                .ReturnsAsync(providers);
             _mapperMock.Setup(m => m.MapAsync<LearningProvider>(It.IsAny<Provider>(), _cancellationToken))
-                .ReturnsAsync((Provider provider, CancellationToken ct) => learningProviders.Single(x => x.Ukprn == provider.UnitedKingdomProviderReferenceNumber));
-            
-            var actual = await _manager.GetLearningProvidersAsync(ids, null, _cancellationToken);
+                .ReturnsAsync((Provider provider, CancellationToken ct) =>
+                    learningProviders.Single(x => x.Ukprn == provider.UnitedKingdomProviderReferenceNumber));
+
+            var actual = await _manager.GetLearningProvidersAsync(ids, null, readFromLive, _cancellationToken);
 
             Assert.AreEqual(ukprns.Length, actual.Length);
             Assert.IsNotNull(actual[0]);
@@ -151,8 +191,9 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
             Assert.IsNotNull(actual[2]);
         }
 
-        [Test]
-        public async Task ThenItShouldReturnResultsInSameOrderAsRequest()
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task ThenItShouldReturnResultsInSameOrderAsRequest(bool readFromLive)
         {
             var ukprns = new[] {_fixture.Create<long>(), _fixture.Create<long>(), _fixture.Create<long>()};
             var providers = new[]
@@ -169,10 +210,13 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
                 .ToArray();
             _ukrlpApiClientMock.Setup(c => c.GetProvidersAsync(It.IsAny<long[]>(), _cancellationToken))
                 .ReturnsAsync(providers);
+            _providerRepository.Setup(c => c.GetProvidersAsync(It.IsAny<long[]>(), _cancellationToken))
+                .ReturnsAsync(providers);
             _mapperMock.Setup(m => m.MapAsync<LearningProvider>(It.IsAny<Provider>(), _cancellationToken))
-                .ReturnsAsync((Provider provider, CancellationToken ct) => learningProviders.Single(x => x.Ukprn == provider.UnitedKingdomProviderReferenceNumber));
-         
-            var actual = await _manager.GetLearningProvidersAsync(ids, null, _cancellationToken);
+                .ReturnsAsync((Provider provider, CancellationToken ct) =>
+                    learningProviders.Single(x => x.Ukprn == provider.UnitedKingdomProviderReferenceNumber));
+
+            var actual = await _manager.GetLearningProvidersAsync(ids, null, readFromLive, _cancellationToken);
 
             Assert.AreEqual(ukprns.Length, actual.Length);
             Assert.AreEqual(ukprns[0], actual[0].Ukprn);

@@ -35,7 +35,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
         {
             _learningProviderManagerMock = new Mock<ILearningProviderManager>();
             _learningProviderManagerMock.Setup(p => p.GetLearningProvidersAsync(
-                    It.IsAny<string[]>(), It.IsAny<string[]>(), It.IsAny<CancellationToken>()))
+                    It.IsAny<string[]>(), It.IsAny<string[]>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new LearningProvider[0]);
 
             _httpSpiExecutionContextManager = new Mock<IHttpSpiExecutionContextManager>();
@@ -54,7 +54,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
         public async Task ThenItShouldReturnLearningProviders(LearningProvider[] providers)
         {
             _learningProviderManagerMock.Setup(p => p.GetLearningProvidersAsync(
-                    It.IsAny<string[]>(), It.IsAny<string[]>(), It.IsAny<CancellationToken>()))
+                    It.IsAny<string[]>(), It.IsAny<string[]>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(providers);
 
             var actual = await _function.RunAsync(GetHttpRequest(providers), _cancellationToken);
@@ -70,13 +70,14 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
 
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldCallManagerWithSpecifiedIdentifiersAndFields(LearningProvider[] providers, string[] fields)
+        public async Task ThenItShouldCallManagerWithSpecifiedIdentifiersAndFieldsAndLiveOption(LearningProvider[] providers, string[] fields, bool readFromLive)
         {
-            await _function.RunAsync(GetHttpRequest(providers, fields), _cancellationToken);
+            await _function.RunAsync(GetHttpRequest(providers, fields, readFromLive), _cancellationToken);
 
             _learningProviderManagerMock.Verify(p => p.GetLearningProvidersAsync(
                     It.Is<string[]>(ids => ids.Length == providers.Length),
                     fields,
+                    readFromLive,
                     _cancellationToken),
                 Times.Once);
         }
@@ -140,16 +141,16 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
         }
 
 
-        private HttpRequest GetHttpRequest(LearningProvider[] providers, string[] fields = null)
+        private HttpRequest GetHttpRequest(LearningProvider[] providers, string[] fields = null, bool? readFromLive = null)
         {
             var identifiers = providers.Select(p => p.Ukprn.ToString()).ToArray();
-            return GetHttpRequest(identifiers, fields);
+            return GetHttpRequest(identifiers, fields, readFromLive);
         }
 
-        private HttpRequest GetHttpRequest(string[] identifiers = null, string[] fields = null)
+        private HttpRequest GetHttpRequest(string[] identifiers = null, string[] fields = null, bool? readFromLive = null)
         {
             return GetHttpRequestFromGetLearningProvidersRequest(
-                GetDefaultGetLearningProvidersRequest(identifiers, fields));
+                GetDefaultGetLearningProvidersRequest(identifiers, fields, readFromLive));
         }
 
         private HttpRequest GetHttpRequestFromGetLearningProvidersRequest(GetLearningProvidersRequest getLearningProvidersRequest)
@@ -166,12 +167,13 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
             };
         }
 
-        private GetLearningProvidersRequest GetDefaultGetLearningProvidersRequest(string[] identifiers = null, string[] fields = null)
+        private GetLearningProvidersRequest GetDefaultGetLearningProvidersRequest(string[] identifiers = null, string[] fields = null, bool? readFromLive = null)
         {
             return new GetLearningProvidersRequest
             {
                 Identifiers = identifiers ?? new[] {"12345678"},
                 Fields = fields,
+                Live = readFromLive.HasValue && readFromLive.Value,
             };
         }
     }

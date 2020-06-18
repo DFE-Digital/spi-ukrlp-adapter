@@ -10,6 +10,7 @@ namespace Dfe.Spi.UkrlpAdapter.Domain.Cache
         Task StoreInStagingAsync(Provider[] providers, CancellationToken cancellationToken);
         Task<Provider> GetProviderAsync(long ukprn, CancellationToken cancellationToken);
         Task<Provider> GetProviderFromStagingAsync(long ukprn, CancellationToken cancellationToken);
+        Task<Provider[]> GetProvidersAsync(long[] ukprns, CancellationToken cancellationToken);
         Task<Provider[]> GetProvidersAsync(CancellationToken cancellationToken);
     }
 }
