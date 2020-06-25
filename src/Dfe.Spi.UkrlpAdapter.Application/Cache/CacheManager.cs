@@ -14,7 +14,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
     public interface ICacheManager
     {
         Task DownloadProvidersToCacheAsync(CancellationToken cancellationToken);
-        Task ProcessBatchOfProviders(long[] ukprns, CancellationToken cancellationToken);
+        Task ProcessBatchOfProviders(long[] ukprns, DateTime pointInTime, CancellationToken cancellationToken);
     }
 
     public class CacheManager : ICacheManager
@@ -80,7 +80,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
                     .ToArray();
 
                 _logger.Debug($"Queuing {position} to {position + batch.Length} for processing");
-                await _providerProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
+                await _providerProcessingQueue.EnqueueBatchOfStagingAsync(batch, pointInTime, cancellationToken);
 
                 position += batchSize;
             }
@@ -93,9 +93,8 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
             _logger.Info("Finished downloading providers to cache");
         }
 
-        public async Task ProcessBatchOfProviders(long[] ukprns, CancellationToken cancellationToken)
+        public async Task ProcessBatchOfProviders(long[] ukprns, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            var pointInTime = DateTime.UtcNow.Date; // TODO: FIX!!!
             foreach (var ukprn in ukprns)
             {
                 var current = await _providerRepository.GetProviderAsync(ukprn, cancellationToken);

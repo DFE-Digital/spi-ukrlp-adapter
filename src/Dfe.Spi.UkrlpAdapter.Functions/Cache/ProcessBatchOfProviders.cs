@@ -36,10 +36,10 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.Cache
 
             _logger.Info($"{FunctionName} trigger with: {queueContent}");
 
-            var ukprns = JsonConvert.DeserializeObject<long[]>(queueContent);
-            _logger.Debug($"Deserialized to {ukprns.Length} urns");
+            var queueItem = JsonConvert.DeserializeObject<StagingBatchQueueItem>(queueContent);
+            _logger.Debug($"Deserialized to {queueItem.Identifiers.Length} ukprns on {queueItem.PointInTime}");
 
-            await _cacheManager.ProcessBatchOfProviders(ukprns, cancellationToken);
+            await _cacheManager.ProcessBatchOfProviders(queueItem.Identifiers, queueItem.PointInTime, cancellationToken);
         }
     }
 }

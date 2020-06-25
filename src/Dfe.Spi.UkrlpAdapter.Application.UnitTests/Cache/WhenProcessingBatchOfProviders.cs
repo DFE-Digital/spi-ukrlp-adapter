@@ -75,7 +75,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             var ukprns = new[] {100001L, 100002L};
             var pointInTime = DateTime.UtcNow.Date;
 
-            await _manager.ProcessBatchOfProviders(ukprns, _cancellationToken);
+            await _manager.ProcessBatchOfProviders(ukprns, pointInTime, _cancellationToken);
 
             _providerRepositoryMock.Verify(
                 r => r.GetProviderAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()),
@@ -119,7 +119,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishCreatedEventIfNoCurrent(long ukprn, LearningProvider learningProvider)
+        public async Task ThenItShouldPublishCreatedEventIfNoCurrent(long ukprn, DateTime pointInTime, LearningProvider learningProvider)
         {
             _providerRepositoryMock.Setup(r => r.GetProviderAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Provider) null);
@@ -133,7 +133,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _mapperMock.Setup(m=>m.MapAsync<LearningProvider>(It.IsAny<Provider>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(learningProvider);
             
-            await _manager.ProcessBatchOfProviders(new[]{ukprn}, _cancellationToken);
+            await _manager.ProcessBatchOfProviders(new[]{ukprn}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
                 p => p.PublishLearningProviderCreatedAsync(learningProvider, It.IsAny<CancellationToken>()),
@@ -141,7 +141,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPublishUpdatedEventIfCurrentThatHasChanged(long ukprn, LearningProvider learningProvider)
+        public async Task ThenItShouldPublishUpdatedEventIfCurrentThatHasChanged(long ukprn, DateTime pointInTime, LearningProvider learningProvider)
         {
             _providerRepositoryMock.Setup(r => r.GetProviderAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Provider
@@ -159,7 +159,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _mapperMock.Setup(m=>m.MapAsync<LearningProvider>(It.IsAny<Provider>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(learningProvider);
             
-            await _manager.ProcessBatchOfProviders(new[]{ukprn}, _cancellationToken);
+            await _manager.ProcessBatchOfProviders(new[]{ukprn}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
                 p => p.PublishLearningProviderUpdatedAsync(learningProvider, It.IsAny<CancellationToken>()),
@@ -167,7 +167,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldNotPublishAnyEventIfCurrentThatHasNotChanged(long urn)
+        public async Task ThenItShouldNotPublishAnyEventIfCurrentThatHasNotChanged(long urn, DateTime pointInTime)
         {
             _providerRepositoryMock.Setup(r => r.GetProviderAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PointInTimeProvider
@@ -183,7 +183,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                     ProviderName = urn.ToString()
                 }); 
             
-            await _manager.ProcessBatchOfProviders(new[]{urn}, _cancellationToken);
+            await _manager.ProcessBatchOfProviders(new[]{urn}, pointInTime, _cancellationToken);
 
             _eventPublisherMock.Verify(
                 p => p.PublishLearningProviderCreatedAsync(It.IsAny<LearningProvider>(), It.IsAny<CancellationToken>()),

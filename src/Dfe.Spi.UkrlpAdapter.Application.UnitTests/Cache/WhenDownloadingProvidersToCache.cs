@@ -115,10 +115,14 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             var expectedBatch2 = providers.Skip(100).Take(100).Select(e => e.UnitedKingdomProviderReferenceNumber)
                 .ToArray();
             _providerProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<long[]>(ukprns => AreEqual(expectedBatch1, ukprns)), _cancellationToken),
+                    It.Is<long[]>(ukprns => AreEqual(expectedBatch1, ukprns)),
+                    DateTime.UtcNow.Date,
+                    _cancellationToken),
                 Times.Once);
             _providerProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<long[]>(ukprns => AreEqual(expectedBatch2, ukprns)), _cancellationToken),
+                    It.Is<long[]>(ukprns => AreEqual(expectedBatch2, ukprns)),
+                    DateTime.UtcNow.Date, 
+                    _cancellationToken),
                 Times.Once);
         }
 

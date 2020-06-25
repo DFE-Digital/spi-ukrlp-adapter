@@ -1,9 +1,11 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture.NUnit3;
 using Dfe.Spi.Common.Http.Server.Definitions;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.UkrlpAdapter.Application.Cache;
+using Dfe.Spi.UkrlpAdapter.Domain.Cache;
 using Dfe.Spi.UkrlpAdapter.Functions.Cache;
 using Moq;
 using Newtonsoft.Json;
@@ -37,12 +39,19 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.Cache
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldCallCacheManagerWithDeserializedUrns(long[] urns)
+        public async Task ThenItShouldCallCacheManagerWithDeserializedUrns(long[] ukprns, DateTime pointInTime)
         {
-            await _function.Run(JsonConvert.SerializeObject(urns), _cancellationToken);
+            var queueItem = new StagingBatchQueueItem
+            {
+                Identifiers = ukprns,
+                PointInTime = pointInTime,
+            };
+            
+            await _function.Run(JsonConvert.SerializeObject(queueItem), _cancellationToken);
 
             _cacheManagerMock.Verify(m => m.ProcessBatchOfProviders(
-                It.Is<long[]>(actual => AreEqual(urns, actual)),
+                It.Is<long[]>(actual => AreEqual(ukprns, actual)),
+                pointInTime,
                 _cancellationToken), Times.Once);
         }
 
