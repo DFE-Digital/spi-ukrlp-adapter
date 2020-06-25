@@ -48,6 +48,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
         public async Task DownloadProvidersToCacheAsync(CancellationToken cancellationToken)
         {
             _logger.Info("Acquiring providers file from UKRLP...");
+            var pointInTime = DateTime.UtcNow.Date;
 
             // Last read
             var lastRead = await _stateRepository.GetLastProviderReadTimeAsync(cancellationToken);
@@ -56,8 +57,15 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
             var providers = await _ukrlpApiClient.GetProvidersUpdatedSinceAsync(lastRead, cancellationToken);
             _logger.Info($"Read {providers.Length} providers from UKRLP that have been updated since {lastRead}");
 
+            // Timestamp
+            var pointInTimeProviders = providers.Select(establishment => establishment.Clone<PointInTimeProvider>()).ToArray();
+            foreach (var pointInTimeEstablishment in pointInTimeProviders)
+            {
+                pointInTimeEstablishment.PointInTime = pointInTime;
+            }
+
             // Store
-            await _providerRepository.StoreInStagingAsync(providers, cancellationToken);
+            await _providerRepository.StoreInStagingAsync(pointInTimeProviders, cancellationToken);
             _logger.Debug($"Stored {providers.Length} providers in staging");
 
             // Queue diff check
@@ -71,8 +79,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
                     .Select(e => e.UnitedKingdomProviderReferenceNumber)
                     .ToArray();
 
-                _logger.Debug(
-                    $"Queuing {position} to {position + batch.Length} for processing");
+                _logger.Debug($"Queuing {position} to {position + batch.Length} for processing");
                 await _providerProcessingQueue.EnqueueBatchOfStagingAsync(batch, cancellationToken);
 
                 position += batchSize;
@@ -88,10 +95,11 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
 
         public async Task ProcessBatchOfProviders(long[] ukprns, CancellationToken cancellationToken)
         {
+            var pointInTime = DateTime.UtcNow.Date; // TODO: FIX!!!
             foreach (var ukprn in ukprns)
             {
                 var current = await _providerRepository.GetProviderAsync(ukprn, cancellationToken);
-                var staging = await _providerRepository.GetProviderFromStagingAsync(ukprn, cancellationToken);
+                var staging = await _providerRepository.GetProviderFromStagingAsync(ukprn, pointInTime, cancellationToken);
 
                 if (current == null)
                 {
@@ -198,7 +206,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
             return true;
         }
 
-        private async Task ProcessProvider(Provider staging,
+        private async Task ProcessProvider(PointInTimeProvider staging,
             Func<LearningProvider, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {

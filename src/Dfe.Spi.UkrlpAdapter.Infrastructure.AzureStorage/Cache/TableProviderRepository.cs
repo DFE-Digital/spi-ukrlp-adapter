@@ -26,7 +26,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
             _table = tableClient.GetTableReference(configuration.ProviderTableName);
         }
 
-        public async Task StoreAsync(Provider provider, CancellationToken cancellationToken)
+        public async Task StoreAsync(PointInTimeProvider provider, CancellationToken cancellationToken)
         {
             await _table.CreateIfNotExistsAsync(cancellationToken);
 
@@ -34,7 +34,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
             await _table.ExecuteAsync(operation, cancellationToken);
         }
 
-        public async Task StoreInStagingAsync(Provider[] providers, CancellationToken cancellationToken)
+        public async Task StoreInStagingAsync(PointInTimeProvider[] providers, CancellationToken cancellationToken)
         {
             const int batchSize = 100;
 
@@ -80,9 +80,9 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
             return JsonConvert.DeserializeObject<Provider>(entity.ProviderJson);
         }
 
-        public async Task<Provider> GetProviderFromStagingAsync(long ukprn, CancellationToken cancellationToken)
+        public async Task<PointInTimeProvider> GetProviderFromStagingAsync(long ukprn, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            var operation = TableOperation.Retrieve<ProviderEntity>(GetStagingPartitionKey(ukprn), ukprn.ToString());
+            var operation = TableOperation.Retrieve<ProviderEntity>(GetStagingPartitionKey(pointInTime), ukprn.ToString());
             var operationResult = await _table.ExecuteAsync(operation, cancellationToken);
             var entity = (ProviderEntity) operationResult.Result;
 
@@ -91,7 +91,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
                 return null;
             }
 
-            return JsonConvert.DeserializeObject<Provider>(entity.ProviderJson);
+            return JsonConvert.DeserializeObject<PointInTimeProvider>(entity.ProviderJson);
         }
 
         public async Task<Provider[]> GetProvidersAsync(long[] ukprns, CancellationToken cancellationToken)
@@ -121,30 +121,32 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
         }
 
 
-        private ProviderEntity ModelToCurrent(Provider provider)
+        private ProviderEntity ModelToCurrent(PointInTimeProvider provider)
         {
             return ModelToEntity(provider.UnitedKingdomProviderReferenceNumber.ToString(), "current", provider);
         }
 
-        private ProviderEntity ModelToStaging(Provider provider)
+        private ProviderEntity ModelToStaging(PointInTimeProvider provider)
         {
-            return ModelToEntity(GetStagingPartitionKey(provider.UnitedKingdomProviderReferenceNumber),
+            return ModelToEntity(GetStagingPartitionKey(provider.PointInTime),
                 provider.UnitedKingdomProviderReferenceNumber.ToString(), provider);
         }
 
-        private ProviderEntity ModelToEntity(string partitionKey, string rowKey, Provider provider)
+        private ProviderEntity ModelToEntity(string partitionKey, string rowKey, PointInTimeProvider provider)
         {
             return new ProviderEntity
             {
                 PartitionKey = partitionKey,
                 RowKey = rowKey,
                 ProviderJson = JsonConvert.SerializeObject(provider),
+                PointInTime = provider.PointInTime,
+                IsCurrent = provider.IsCurrent,
             };
         }
 
-        private string GetStagingPartitionKey(long urn)
+        private string GetStagingPartitionKey(DateTime pointInTime)
         {
-            return $"staging{Math.Floor(urn / 5000d) * 5000}";
+            return $"staging{pointInTime:yyyyMMdd}";
         }
 
         private async Task<T[]> ExecuteQueryAsync<T>(TableQuery<T> query, CancellationToken cancellationToken)

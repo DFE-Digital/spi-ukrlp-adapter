@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -47,11 +48,11 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _providerRepositoryMock.Setup(r => r.GetProviderAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Provider) null);
             _providerRepositoryMock.Setup(r =>
-                    r.GetProviderFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((long ukprn, CancellationToken cancellationToken) => new Provider
+                    r.GetProviderFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((long ukprn, DateTime pointInTime, CancellationToken cancellationToken) => new PointInTimeProvider
                 {
                     UnitedKingdomProviderReferenceNumber = ukprn,
-                    ProviderName = ukprn.ToString()
+                    ProviderName = ukprn.ToString(),
                 });
 
             _loggerMock = new Mock<ILoggerWrapper>();
@@ -72,6 +73,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         public async Task ThenItShouldProcessEveryUrn()
         {
             var ukprns = new[] {100001L, 100002L};
+            var pointInTime = DateTime.UtcNow.Date;
 
             await _manager.ProcessBatchOfProviders(ukprns, _cancellationToken);
 
@@ -84,21 +86,21 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 Times.Once);
 
             _providerRepositoryMock.Verify(
-                r => r.GetProviderFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()),
+                r => r.GetProviderFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
-            _providerRepositoryMock.Verify(r => r.GetProviderFromStagingAsync(ukprns[0], _cancellationToken),
+            _providerRepositoryMock.Verify(r => r.GetProviderFromStagingAsync(ukprns[0], pointInTime, _cancellationToken),
                 Times.Once);
-            _providerRepositoryMock.Verify(r => r.GetProviderFromStagingAsync(ukprns[1], _cancellationToken),
+            _providerRepositoryMock.Verify(r => r.GetProviderFromStagingAsync(ukprns[1], pointInTime, _cancellationToken),
                 Times.Once);
 
             _providerRepositoryMock.Verify(
-                r => r.StoreAsync(It.IsAny<Provider>(), It.IsAny<CancellationToken>()),
+                r => r.StoreAsync(It.IsAny<PointInTimeProvider>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2));
             _providerRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<Provider>(e => e.UnitedKingdomProviderReferenceNumber == ukprns[0]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeProvider>(e => e.UnitedKingdomProviderReferenceNumber == ukprns[0]), _cancellationToken),
                 Times.Once);
             _providerRepositoryMock.Verify(
-                r => r.StoreAsync(It.Is<Provider>(e => e.UnitedKingdomProviderReferenceNumber == ukprns[1]), _cancellationToken),
+                r => r.StoreAsync(It.Is<PointInTimeProvider>(e => e.UnitedKingdomProviderReferenceNumber == ukprns[1]), _cancellationToken),
                 Times.Once);
 
             _mapperMock.Verify(
@@ -122,8 +124,8 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             _providerRepositoryMock.Setup(r => r.GetProviderAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Provider) null);
             _providerRepositoryMock.Setup(r =>
-                    r.GetProviderFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Provider
+                    r.GetProviderFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeProvider
                 {
                     UnitedKingdomProviderReferenceNumber = ukprn,
                     ProviderName = ukprn.ToString()
@@ -148,8 +150,8 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                     ProviderName = "old name"
                 });
             _providerRepositoryMock.Setup(r =>
-                    r.GetProviderFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Provider
+                    r.GetProviderFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeProvider
                 {
                     UnitedKingdomProviderReferenceNumber = ukprn,
                     ProviderName = ukprn.ToString()
@@ -168,14 +170,14 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         public async Task ThenItShouldNotPublishAnyEventIfCurrentThatHasNotChanged(long urn)
         {
             _providerRepositoryMock.Setup(r => r.GetProviderAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Provider
+                .ReturnsAsync(new PointInTimeProvider
                 {
                     UnitedKingdomProviderReferenceNumber = urn,
                     ProviderName = urn.ToString()
                 });
             _providerRepositoryMock.Setup(r =>
-                    r.GetProviderFromStagingAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Provider
+                    r.GetProviderFromStagingAsync(It.IsAny<long>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PointInTimeProvider
                 {
                     UnitedKingdomProviderReferenceNumber = urn,
                     ProviderName = urn.ToString()

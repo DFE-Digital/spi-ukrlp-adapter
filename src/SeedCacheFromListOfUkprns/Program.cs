@@ -87,7 +87,16 @@ namespace SeedCacheFromListOfUkprns
                 _logger.Debug($"Processing {position} to {position + batch.Length} of {ukprns.Length} ukprns");
                 
                 var providers = await _ukrlpApiClient.GetProvidersAsync(batch, cancellationToken);
-                foreach (var provider in providers)
+
+                // Timestamp
+                var pointInTime = DateTime.UtcNow.Date;
+                var pointInTimeProviders = providers.Select(establishment => Clone<PointInTimeProvider>(establishment)).ToArray();
+                foreach (var pointInTimeEstablishment in pointInTimeProviders)
+                {
+                    pointInTimeEstablishment.PointInTime = pointInTime;
+                }
+                
+                foreach (var provider in pointInTimeProviders)
                 {
                     await _providerRepository.StoreAsync(provider, cancellationToken);
                     _logger.Debug($"Stored {provider.UnitedKingdomProviderReferenceNumber} in repository");
@@ -95,6 +104,36 @@ namespace SeedCacheFromListOfUkprns
 
                 position += batchSize;
             }
+        }
+        
+        static TDestination Clone<TDestination>(object source, Func<TDestination> activator = null)
+        {
+            // TODO: This could be more efficient with some caching of properties
+            var sourceProperties = source.GetType().GetProperties();
+            var destinationProperties = source.GetType().GetProperties();
+
+            TDestination destination;
+            if (activator != null)
+            {
+                destination = activator();
+            }
+            else
+            {
+                destination = Activator.CreateInstance<TDestination>();
+            }
+
+            foreach (var destinationProperty in destinationProperties)
+            {
+                var sourceProperty = sourceProperties.SingleOrDefault(p => p.Name == destinationProperty.Name);
+                if (sourceProperty != null)
+                {
+                    // TODO: This assumes the property types are the same. If this is not true then handling will be required
+                    var sourceValue = sourceProperty.GetValue(source);
+                    destinationProperty.SetValue(destination, sourceValue);
+                }
+            }
+
+            return destination;
         }
 
 
