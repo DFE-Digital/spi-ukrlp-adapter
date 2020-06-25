@@ -79,7 +79,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         }
 
         [Test, AutoData]
-        public async Task ThenItShouldStoreProvidersInStaging(Provider[] providers)
+        public async Task ThenItShouldStoreProvidersInStaging(PointInTimeProvider[] providers)
         {
             _ukrlpApiClientMock.Setup(c =>
                     c.GetProvidersUpdatedSinceAsync(It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
@@ -87,7 +87,9 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
 
             await _manager.DownloadProvidersToCacheAsync(_cancellationToken);
 
-            _providerRepositoryMock.Verify(r => r.StoreInStagingAsync(providers, _cancellationToken),
+            _providerRepositoryMock.Verify(r => r.StoreInStagingAsync(
+                    It.Is<PointInTimeProvider[]>(storedProviders => AreEqual(providers, DateTime.UtcNow.Date, storedProviders))
+                    , _cancellationToken),
                 Times.Once);
         }
 
@@ -113,10 +115,14 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             var expectedBatch2 = providers.Skip(100).Take(100).Select(e => e.UnitedKingdomProviderReferenceNumber)
                 .ToArray();
             _providerProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<long[]>(ukprns => AreEqual(expectedBatch1, ukprns)), _cancellationToken),
+                    It.Is<long[]>(ukprns => AreEqual(expectedBatch1, ukprns)),
+                    DateTime.UtcNow.Date,
+                    _cancellationToken),
                 Times.Once);
             _providerProcessingQueueMock.Verify(q => q.EnqueueBatchOfStagingAsync(
-                    It.Is<long[]>(ukprns => AreEqual(expectedBatch2, ukprns)), _cancellationToken),
+                    It.Is<long[]>(ukprns => AreEqual(expectedBatch2, ukprns)),
+                    DateTime.UtcNow.Date, 
+                    _cancellationToken),
                 Times.Once);
         }
 
@@ -159,6 +165,29 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
             }
 
             // All good
+            return true;
+        }
+        private bool AreEqual(Provider[] expectedProviders, DateTime expectedPointInTime, PointInTimeProvider[] actual)
+        {
+            if (expectedProviders.Length != actual.Length)
+            {
+                return false;
+            }
+
+            foreach (var expectedProvider in expectedProviders)
+            {
+                var actualGroup = actual.SingleOrDefault(x => x.UnitedKingdomProviderReferenceNumber == expectedProvider.UnitedKingdomProviderReferenceNumber);
+                if (actualGroup == null)
+                {
+                    return false;
+                }
+
+                if (actualGroup.PointInTime != expectedPointInTime)
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
     }

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -58,11 +59,15 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware.UnitTests
         }
 
         [Test, NonRecursiveAutoData]
-        public async Task ThenItShouldPostProviderToProviderCreatedEndpoint(LearningProvider learningProvider)
+        public async Task ThenItShouldPostProviderToProviderCreatedEndpoint(LearningProvider learningProvider, DateTime pointInTime)
         {
-            await _publisher.PublishLearningProviderCreatedAsync(learningProvider, _cancellationToken);
+            await _publisher.PublishLearningProviderCreatedAsync(learningProvider, pointInTime, _cancellationToken);
 
-            var expectedBody = JsonConvert.SerializeObject(learningProvider);
+            var expectedBody = JsonConvert.SerializeObject(new PointInTimeMiddlewareEvent<LearningProvider>
+            {
+                Details = learningProvider,
+                PointInTime = pointInTime,
+            });
             _restClientMock.Verify(c=>c.ExecuteTaskAsync(It.Is<RestRequest>(req=>
                 req.Method == Method.POST &&
                 req.Resource == "learning-provider-created" &&
@@ -82,7 +87,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware.UnitTests
                 });
             
             var actual = Assert.ThrowsAsync<MiddlewareException>(async () =>
-                await _publisher.PublishLearningProviderCreatedAsync(new LearningProvider(), _cancellationToken));
+                await _publisher.PublishLearningProviderCreatedAsync(new LearningProvider(), DateTime.Now, _cancellationToken));
             Assert.AreEqual(HttpStatusCode.InternalServerError, actual.StatusCode);
             Assert.AreEqual("Some error", actual.Details);
         }

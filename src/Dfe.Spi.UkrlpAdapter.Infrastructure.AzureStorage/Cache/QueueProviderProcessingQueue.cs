@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.UkrlpAdapter.Domain.Cache;
@@ -18,11 +19,17 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
             var queueClient = storageAccount.CreateCloudQueueClient();
             _queue = queueClient.GetQueueReference(CacheQueueNames.ProviderProcessingQueue);
         }
-        public async Task EnqueueBatchOfStagingAsync(long[] ukprns, CancellationToken cancellationToken)
+        public async Task EnqueueBatchOfStagingAsync(long[] ukprns, DateTime pointInTime, CancellationToken cancellationToken)
         {
             await _queue.CreateIfNotExistsAsync(cancellationToken);
+
+            var queueItem = new StagingBatchQueueItem
+            {
+                Identifiers = ukprns,
+                PointInTime = pointInTime,
+            };
                 
-            var message = new CloudQueueMessage(JsonConvert.SerializeObject(ukprns));
+            var message = new CloudQueueMessage(JsonConvert.SerializeObject(queueItem));
             await _queue.AddMessageAsync(message, cancellationToken);
         }
     }

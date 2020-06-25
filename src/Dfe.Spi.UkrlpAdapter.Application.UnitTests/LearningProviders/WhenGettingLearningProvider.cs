@@ -98,7 +98,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
             var ukprn = _fixture.Create<long>();
             
             _providerRepository.Setup(c => c.GetProviderAsync(ukprn, _cancellationToken))
-                .ReturnsAsync((Provider) null);
+                .ReturnsAsync((PointInTimeProvider) null);
 
             var actual = await _manager.GetLearningProviderAsync(ukprn.ToString(), null, false, _cancellationToken);
 
@@ -125,17 +125,17 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
         [TestCase(false)]
         public async Task ThenItShouldMapProviderToLearningProvider(bool readFromLive)
         {
-            var establishment = _fixture.Create<Provider>();
+            var provider = _fixture.Create<PointInTimeProvider>();
             var ukprn = _fixture.Create<long>();
             
             _ukrlpApiClientMock.Setup(c => c.GetProviderAsync(ukprn, _cancellationToken))
-                .ReturnsAsync(establishment);
+                .ReturnsAsync(provider);
             _providerRepository.Setup(c => c.GetProviderAsync(ukprn, _cancellationToken))
-                .ReturnsAsync(establishment);
+                .ReturnsAsync(provider);
 
             await _manager.GetLearningProviderAsync(ukprn.ToString(), null, readFromLive, _cancellationToken);
 
-            _mapperMock.Verify(m => m.MapAsync<LearningProvider>(establishment, _cancellationToken),
+            _mapperMock.Verify(m => m.MapAsync<LearningProvider>(provider, _cancellationToken),
                 Times.Once);
         }
 
@@ -149,7 +149,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
             _ukrlpApiClientMock.Setup(c => c.GetProviderAsync(ukprn, _cancellationToken))
                 .ReturnsAsync(new Provider());
             _providerRepository.Setup(c => c.GetProviderAsync(ukprn, _cancellationToken))
-                .ReturnsAsync(new Provider());
+                .ReturnsAsync(new PointInTimeProvider());
             _mapperMock.Setup(m => m.MapAsync<LearningProvider>(It.IsAny<Provider>(), _cancellationToken))
                 .ReturnsAsync(learningProvider);
 

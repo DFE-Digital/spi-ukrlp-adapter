@@ -39,17 +39,25 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiMiddleware
             _logger = logger;
         }
 
-        public async Task PublishLearningProviderCreatedAsync(LearningProvider learningProvider,
-            CancellationToken cancellationToken)
+        public async Task PublishLearningProviderCreatedAsync(LearningProvider learningProvider, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            await SendEventToMiddleware("learning-provider-created", learningProvider, cancellationToken);
+            var @event = new PointInTimeMiddlewareEvent<LearningProvider>
+            {
+                Details = learningProvider,
+                PointInTime = pointInTime,
+            };
+            await SendEventToMiddleware("learning-provider-created", @event, cancellationToken);
             _logger.Debug($"Published learning provider created: {JsonConvert.SerializeObject(learningProvider)}");
         }
 
-        public async Task PublishLearningProviderUpdatedAsync(LearningProvider learningProvider,
-            CancellationToken cancellationToken)
+        public async Task PublishLearningProviderUpdatedAsync(LearningProvider learningProvider, DateTime pointInTime, CancellationToken cancellationToken)
         {
-            await SendEventToMiddleware("learning-provider-updated", learningProvider, cancellationToken);
+            var @event = new PointInTimeMiddlewareEvent<LearningProvider>
+            {
+                Details = learningProvider,
+                PointInTime = pointInTime,
+            };
+            await SendEventToMiddleware("learning-provider-updated", @event, cancellationToken);
             _logger.Debug($"Published learning provider updated: {JsonConvert.SerializeObject(learningProvider)}");
         }
 
