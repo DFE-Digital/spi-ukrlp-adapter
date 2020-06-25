@@ -97,26 +97,26 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
         {
             foreach (var ukprn in ukprns)
             {
-                var current = await _providerRepository.GetProviderAsync(ukprn, cancellationToken);
+                var previous = await _providerRepository.GetProviderAsync(ukprn, pointInTime, cancellationToken);
                 var staging = await _providerRepository.GetProviderFromStagingAsync(ukprn, pointInTime, cancellationToken);
 
-                if (current == null)
+                if (previous == null)
                 {
-                    _logger.Info($"{ukprn} has not been seen before. Processing as created");
+                    _logger.Info($"{ukprn} has not been seen before {pointInTime}. Processing as created");
 
                     await ProcessProvider(staging, _eventPublisher.PublishLearningProviderCreatedAsync,
                         cancellationToken);
                 }
-                else if (!AreSame(current, staging))
+                else if (!AreSame(previous, staging))
                 {
-                    _logger.Info($"{ukprn} has changed. Processing as updated");
+                    _logger.Info($"{ukprn} on {pointInTime} has changed since {previous.PointInTime}. Processing as updated");
 
                     await ProcessProvider(staging, _eventPublisher.PublishLearningProviderUpdatedAsync,
                         cancellationToken);
                 }
                 else
                 {
-                    _logger.Info($"{ukprn} has not changed. Skipping");
+                    _logger.Info($"{ukprn} on {pointInTime} has not changed since {previous.PointInTime}. Skipping");
                 }
             }
         }
@@ -205,11 +205,24 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
             return true;
         }
 
-        private async Task ProcessProvider(PointInTimeProvider staging,
+        private async Task ProcessProvider(
+            PointInTimeProvider staging,
             Func<LearningProvider, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {
-            await _providerRepository.StoreAsync(staging, cancellationToken);
+            var current = await _providerRepository.GetProviderAsync(staging.UnitedKingdomProviderReferenceNumber, cancellationToken);
+            
+            staging.IsCurrent = current == null || staging.PointInTime > current.PointInTime;
+            if (current != null && staging.IsCurrent)
+            {
+                current.IsCurrent = false;
+            }
+
+            var toStore = current == null || current.IsCurrent
+                ? new[] {staging}
+                : new[] {current, staging};
+            
+            await _providerRepository.StoreAsync(toStore, cancellationToken);
             _logger.Debug($"Stored {staging.UnitedKingdomProviderReferenceNumber} in repository");
 
             var learningProvider = await _mapper.MapAsync<LearningProvider>(staging, cancellationToken);
