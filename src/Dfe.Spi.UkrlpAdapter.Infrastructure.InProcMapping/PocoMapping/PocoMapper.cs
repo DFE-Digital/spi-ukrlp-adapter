@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.UkrlpAdapter.Domain.Cache;
 using Dfe.Spi.UkrlpAdapter.Domain.Mapping;
 using Dfe.Spi.UkrlpAdapter.Domain.Translation;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
@@ -31,7 +32,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.InProcMapping.PocoMapping
 
         private ObjectMapper GetMapperForType(Type type)
         {
-            if (type == typeof(Provider))
+            if (type == typeof(Provider) || type == typeof(PointInTimeProvider))
             {
                 return new ProviderMapper(_translator);
             }

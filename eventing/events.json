@@ -15,11 +15,22 @@
     "learning-provider-updated": {
       "description": "Update to learning provider has been detected",
       "schema": {
-        "$ref": "#/definitions/learning-provider"
+        "$ref": "#/definitions/learning-provider-event"
       }
     }
   },
   "definitions": {
+    "learning-provider-event": {
+      "type": "object",
+      "properties": {
+        "details": {
+          "$ref": "#/definitions/learning-provider"
+        },
+        "pointInTime": {
+          "type": "string"
+        }
+      }
+    },
     "learning-provider": {
       "type": "object",
       "properties": {

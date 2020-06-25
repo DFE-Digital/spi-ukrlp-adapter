@@ -207,7 +207,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
 
         private async Task ProcessProvider(
             PointInTimeProvider staging,
-            Func<LearningProvider, CancellationToken, Task> publishEvent,
+            Func<LearningProvider, DateTime, CancellationToken, Task> publishEvent,
             CancellationToken cancellationToken)
         {
             var current = await _providerRepository.GetProviderAsync(staging.UnitedKingdomProviderReferenceNumber, cancellationToken);
@@ -226,7 +226,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
             _logger.Debug($"Stored {staging.UnitedKingdomProviderReferenceNumber} in repository");
 
             var learningProvider = await _mapper.MapAsync<LearningProvider>(staging, cancellationToken);
-            await publishEvent(learningProvider, cancellationToken);
+            await publishEvent(learningProvider, staging.PointInTime, cancellationToken);
             _logger.Debug($"Sent event for {staging.UnitedKingdomProviderReferenceNumber}");
         }
     }
