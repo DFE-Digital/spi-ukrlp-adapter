@@ -47,7 +47,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
         public async Task ThenItShouldReturnLearningProviderIfFound(int urn, LearningProvider provider)
         {
             _learningProviderManagerMock.Setup(x =>
-                    x.GetLearningProviderAsync(It.IsAny<string>(), null, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+                    x.GetLearningProviderAsync(It.IsAny<string>(), null, It.IsAny<bool>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(provider);
 
             var actual = await _function.Run(new DefaultHttpRequest(new DefaultHttpContext()), urn.ToString(),
@@ -62,7 +62,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
         public async Task ThenItShouldReturnNotFoundResultIfNotFound()
         {
             _learningProviderManagerMock.Setup(x =>
-                    x.GetLearningProviderAsync(It.IsAny<string>(), null, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+                    x.GetLearningProviderAsync(It.IsAny<string>(), null, It.IsAny<bool>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((LearningProvider) null);
 
             var actual = await _function.Run(new DefaultHttpRequest(new DefaultHttpContext()), "123",
@@ -76,7 +76,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
         public async Task ThenItShouldReturnBadRequestIfArgumentExceptionThrown(string message)
         {
             _learningProviderManagerMock.Setup(x =>
-                    x.GetLearningProviderAsync(It.IsAny<string>(), null, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+                    x.GetLearningProviderAsync(It.IsAny<string>(), null, It.IsAny<bool>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new ArgumentException(message));
 
             var actual = await _function.Run(new DefaultHttpRequest(new DefaultHttpContext()), "123",

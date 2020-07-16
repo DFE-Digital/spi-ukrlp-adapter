@@ -58,7 +58,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
         protected override async Task<IActionResult> ProcessWellFormedRequestAsync(GetLearningProvidersRequest request, FunctionRunContext runContext,
             CancellationToken cancellationToken)
         {
-            var providers = await _learningProviderManager.GetLearningProvidersAsync(request.Identifiers, request.Fields, request.Live, cancellationToken);
+            var providers = await _learningProviderManager.GetLearningProvidersAsync(request.Identifiers, request.Fields, request.Live, request.PointInTime, cancellationToken);
             
             return new FormattedJsonResult(providers);
         }
@@ -69,5 +69,6 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
         public string[] Identifiers { get; set; }
         public string[] Fields { get; set; }
         public bool Live { get; set; }
+        public DateTime? PointInTime { get; set; }
     }
 }
