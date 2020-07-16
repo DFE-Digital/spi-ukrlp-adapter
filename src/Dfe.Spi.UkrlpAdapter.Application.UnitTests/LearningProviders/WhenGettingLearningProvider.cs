@@ -58,7 +58,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
         {
             var ukprn = _fixture.Create<long>();
 
-            await _manager.GetLearningProviderAsync(ukprn.ToString(), null, true, _cancellationToken);
+            await _manager.GetLearningProviderAsync(ukprn.ToString(), null, true, null, _cancellationToken);
 
             _ukrlpApiClientMock.Verify(c => c.GetProviderAsync(ukprn, _cancellationToken),
                 Times.Once);
@@ -74,7 +74,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
             _ukrlpApiClientMock.Setup(c => c.GetProviderAsync(ukprn, _cancellationToken))
                 .ReturnsAsync((Provider) null);
 
-            var actual = await _manager.GetLearningProviderAsync(ukprn.ToString(), null, true, _cancellationToken);
+            var actual = await _manager.GetLearningProviderAsync(ukprn.ToString(), null, true, null, _cancellationToken);
 
             Assert.IsNull(actual);
         }
@@ -84,9 +84,9 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
         {
             var ukprn = _fixture.Create<long>();
 
-            await _manager.GetLearningProviderAsync(ukprn.ToString(), null, false, _cancellationToken);
+            await _manager.GetLearningProviderAsync(ukprn.ToString(), null, false, null, _cancellationToken);
 
-            _providerRepository.Verify(c => c.GetProviderAsync(ukprn, _cancellationToken),
+            _providerRepository.Verify(c => c.GetProviderAsync(ukprn, It.IsAny<DateTime?>(), _cancellationToken),
                 Times.Once);
             _ukrlpApiClientMock.Verify(c => c.GetProviderAsync(ukprn, _cancellationToken),
                 Times.Never);
@@ -100,60 +100,68 @@ namespace Dfe.Spi.UkrlpAdapter.Application.UnitTests.LearningProviders
             _providerRepository.Setup(c => c.GetProviderAsync(ukprn, _cancellationToken))
                 .ReturnsAsync((PointInTimeProvider) null);
 
-            var actual = await _manager.GetLearningProviderAsync(ukprn.ToString(), null, false, _cancellationToken);
+            var actual = await _manager.GetLearningProviderAsync(ukprn.ToString(), null, false, null, _cancellationToken);
 
             Assert.IsNull(actual);
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void ThenItShouldThrowExceptionIfIdIsNotNumeric(bool readFromLive)
+        [TestCase(true, null)]
+        [TestCase(false, null)]
+        [TestCase(true, "2020-06-16")]
+        [TestCase(false, "2020-06-16")]
+        public void ThenItShouldThrowExceptionIfIdIsNotNumeric(bool readFromLive, DateTime? pointInTime)
         {
             Assert.ThrowsAsync<ArgumentException>(async () =>
-                await _manager.GetLearningProviderAsync("NotANumber", null, readFromLive, _cancellationToken));
+                await _manager.GetLearningProviderAsync("NotANumber", null, readFromLive, pointInTime, _cancellationToken));
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void ThenItShouldThrowExceptionIfIdIsNot8Digits(bool readFromLive)
+        [TestCase(true, null)]
+        [TestCase(false, null)]
+        [TestCase(true, "2020-06-16")]
+        [TestCase(false, "2020-06-16")]
+        public void ThenItShouldThrowExceptionIfIdIsNot8Digits(bool readFromLive, DateTime? pointInTime)
         {
             Assert.ThrowsAsync<ArgumentException>(async () =>
-                await _manager.GetLearningProviderAsync("123456789", null, readFromLive, _cancellationToken));
+                await _manager.GetLearningProviderAsync("123456789", null, readFromLive, pointInTime, _cancellationToken));
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public async Task ThenItShouldMapProviderToLearningProvider(bool readFromLive)
+        [TestCase(true, null)]
+        [TestCase(false, null)]
+        [TestCase(true, "2020-06-16")]
+        [TestCase(false, "2020-06-16")]
+        public async Task ThenItShouldMapProviderToLearningProvider(bool readFromLive, DateTime? pointInTime)
         {
             var provider = _fixture.Create<PointInTimeProvider>();
             var ukprn = _fixture.Create<long>();
             
             _ukrlpApiClientMock.Setup(c => c.GetProviderAsync(ukprn, _cancellationToken))
                 .ReturnsAsync(provider);
-            _providerRepository.Setup(c => c.GetProviderAsync(ukprn, _cancellationToken))
+            _providerRepository.Setup(c => c.GetProviderAsync(ukprn, pointInTime, _cancellationToken))
                 .ReturnsAsync(provider);
 
-            await _manager.GetLearningProviderAsync(ukprn.ToString(), null, readFromLive, _cancellationToken);
+            await _manager.GetLearningProviderAsync(ukprn.ToString(), null, readFromLive, pointInTime, _cancellationToken);
 
             _mapperMock.Verify(m => m.MapAsync<LearningProvider>(provider, _cancellationToken),
                 Times.Once);
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public async Task ThenItShouldReturnMappedLearningProvider(bool readFromLive)
+        [TestCase(true, null)]
+        [TestCase(false, null)]
+        [TestCase(true, "2020-06-16")]
+        [TestCase(false, "2020-06-16")]
+        public async Task ThenItShouldReturnMappedLearningProvider(bool readFromLive, DateTime? pointInTime)
         {
             var learningProvider = _fixture.Create<LearningProvider>();
             var ukprn = _fixture.Create<long>();
             
             _ukrlpApiClientMock.Setup(c => c.GetProviderAsync(ukprn, _cancellationToken))
                 .ReturnsAsync(new Provider());
-            _providerRepository.Setup(c => c.GetProviderAsync(ukprn, _cancellationToken))
+            _providerRepository.Setup(c => c.GetProviderAsync(ukprn, pointInTime, _cancellationToken))
                 .ReturnsAsync(new PointInTimeProvider());
             _mapperMock.Setup(m => m.MapAsync<LearningProvider>(It.IsAny<Provider>(), _cancellationToken))
                 .ReturnsAsync(learningProvider);
 
-            var actual = await _manager.GetLearningProviderAsync(ukprn.ToString(), null, readFromLive, _cancellationToken);
+            var actual = await _manager.GetLearningProviderAsync(ukprn.ToString(), null, readFromLive, pointInTime, _cancellationToken);
 
             Assert.AreSame(learningProvider, actual);
         }

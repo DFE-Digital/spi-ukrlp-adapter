@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Dfe.Spi.Common.Extensions;
 using Dfe.Spi.Common.Http.Server;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.UkrlpAdapter.Application.LearningProviders;
@@ -38,16 +39,32 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
             CancellationToken cancellationToken)
         {
             _httpSpiExecutionContextManager.SetContext(req.Headers);
+            _logger.Info($"{FunctionName} triggered at {DateTime.Now} with id {id}");
 
             string fields = req.Query["fields"];
             var live = ((string) req.Query["live"] ?? "").ToLower();
             var readFromLive = live == "true" || live == "yes" || live == "1";
-
-            _logger.Info($"{FunctionName} triggered at {DateTime.Now} with id {id}");
+            DateTime? pointInTime;
 
             try
             {
-                var learningProvider = await _learningProviderManager.GetLearningProviderAsync(id, fields, readFromLive, cancellationToken);
+                var pointInTimeString = (string) req.Query["pointInTime"];
+                pointInTime = string.IsNullOrEmpty(pointInTimeString)
+                    ? null
+                    : (DateTime?) pointInTimeString.ToDateTime();
+            }
+            catch (InvalidDateTimeFormatException ex)
+            {
+                return new HttpErrorBodyResult(
+                    HttpStatusCode.BadRequest,
+                    Errors.InvalidQueryParameter.Code,
+                    ex.Message);
+            }
+
+
+            try
+            {
+                var learningProvider = await _learningProviderManager.GetLearningProviderAsync(id, fields, readFromLive, pointInTime, cancellationToken);
 
                 if (learningProvider == null)
                 {
@@ -56,16 +73,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
                 }
 
                 _logger.Info($"{FunctionName} found learning provider with id {id}. Returning ok");
-                if (JsonConvert.DefaultSettings != null)
-                {
-                    return new JsonResult(
-                        learningProvider,
-                        JsonConvert.DefaultSettings());
-                }
-                else
-                {
-                    return new JsonResult(learningProvider);
-                }
+                return new FormattedJsonResult(learningProvider);
             }
             catch (ArgumentException ex)
             {

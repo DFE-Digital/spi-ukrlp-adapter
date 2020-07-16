@@ -156,6 +156,25 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
             return await QueryAsync(query, cancellationToken);
         }
 
+        public async Task<Provider[]> GetProvidersAsync(long[] ukprns, DateTime? pointInTime, CancellationToken cancellationToken)
+        {
+            var ukprnFilters = ukprns
+                .Select(ukprn => $"PartitionKey eq '{ukprn}'")
+                .Aggregate((x, y) => $"{x} or {y}");
+            var timeFilter = pointInTime.HasValue
+                ? $"RowKey le '{pointInTime.Value:yyyyMMdd}'"
+                : "RowKey eq 'current'";
+            var filter = $"{timeFilter} and ({ukprnFilters})";
+            var query = new TableQuery<ProviderEntity>()
+                .Where(filter);
+            var results = await QueryAsync(query, cancellationToken);
+
+            return results
+                .GroupBy(p => p.UnitedKingdomProviderReferenceNumber)
+                .Select(g => (Provider)g.OrderByDescending(p => p.PointInTime).First())
+                .ToArray();
+        }
+
         public async Task<Provider[]> GetProvidersAsync(CancellationToken cancellationToken)
         {
             var query = new TableQuery<ProviderEntity>()

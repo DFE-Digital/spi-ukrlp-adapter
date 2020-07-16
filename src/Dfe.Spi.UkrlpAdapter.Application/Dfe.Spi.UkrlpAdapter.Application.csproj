@@ -7,8 +7,8 @@
     <ItemGroup>
       <PackageReference Include="Dfe.Spi.Common.Extensions" Version="1.1.1" />
       <PackageReference Include="Dfe.Spi.Common.Logging" Version="1.1.1" />
-      <PackageReference Include="Dfe.Spi.Models" Version="2.0.2" />
-      <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+      <PackageReference Include="Dfe.Spi.Models" Version="2.1.0" />
+      <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     </ItemGroup>
 
     <ItemGroup>

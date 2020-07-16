@@ -14,8 +14,8 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
 {
     public interface ILearningProviderManager
     {
-        Task<LearningProvider> GetLearningProviderAsync(string id, string fields, bool readFromLive, CancellationToken cancellationToken);
-        Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, CancellationToken cancellationToken);
+        Task<LearningProvider> GetLearningProviderAsync(string id, string fields, bool readFromLive, DateTime? pointInTime, CancellationToken cancellationToken);
+        Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, DateTime? pointInTime, CancellationToken cancellationToken);
     }
 
     public class LearningProviderManager : ILearningProviderManager
@@ -37,7 +37,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
             _logger = logger;
         }
 
-        public async Task<LearningProvider> GetLearningProviderAsync(string id, string fields, bool readFromLive, CancellationToken cancellationToken)
+        public async Task<LearningProvider> GetLearningProviderAsync(string id, string fields, bool readFromLive, DateTime? pointInTime, CancellationToken cancellationToken)
         {
             long ukprn;
             if (!long.TryParse(id, out ukprn))
@@ -52,7 +52,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
 
             var provider = readFromLive
                 ? await _ukrlpApiClient.GetProviderAsync(ukprn, cancellationToken)
-                : await _providerRepository.GetProviderAsync(ukprn, cancellationToken);
+                : await _providerRepository.GetProviderAsync(ukprn, pointInTime, cancellationToken);
             if (provider == null)
             {
                 return null;
@@ -65,7 +65,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
             return await GetLearningProviderFromUkrlpProviderAsync(provider, requestedFields, cancellationToken);
         }
 
-        public async Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, CancellationToken cancellationToken)
+        public async Task<LearningProvider[]> GetLearningProvidersAsync(string[] ids, string[] fields, bool readFromLive, DateTime? pointInTime, CancellationToken cancellationToken)
         {
             var ukprns = new long[ids.Length];
             for (var i = 0; i < ids.Length; i++)
@@ -86,7 +86,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.LearningProviders
 
             var providers = readFromLive
                 ? await _ukrlpApiClient.GetProvidersAsync(ukprns, cancellationToken)
-                : await _providerRepository.GetProvidersAsync(ukprns, cancellationToken);
+                : await _providerRepository.GetProvidersAsync(ukprns, pointInTime, cancellationToken);
             
             var learningProviders = new LearningProvider[ukprns.Length];
             for (var i = 0; i < ukprns.Length; i++)
