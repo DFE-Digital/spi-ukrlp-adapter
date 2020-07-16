@@ -54,8 +54,8 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
                 _cancellationToken);
 
             Assert.IsNotNull(actual);
-            Assert.IsInstanceOf<JsonResult>(actual);
-            Assert.AreSame(provider, ((JsonResult) actual).Value);
+            Assert.IsInstanceOf<FormattedJsonResult>(actual);
+            Assert.AreSame(provider, ((FormattedJsonResult) actual).Value);
         }
 
         [Test]

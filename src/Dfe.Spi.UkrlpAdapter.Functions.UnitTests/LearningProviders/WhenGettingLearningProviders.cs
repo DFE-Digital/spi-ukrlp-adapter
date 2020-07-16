@@ -60,10 +60,10 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
             var actual = await _function.RunAsync(GetHttpRequest(providers), _cancellationToken);
 
             Assert.IsNotNull(actual);
-            Assert.IsInstanceOf<JsonResult>(actual);
-            Assert.AreEqual(200, ((JsonResult) actual).StatusCode);
+            Assert.IsInstanceOf<FormattedJsonResult>(actual);
+            Assert.AreEqual(HttpStatusCode.OK, ((FormattedJsonResult) actual).StatusCode);
 
-            var actualProviders = ((JsonResult) actual).Value as LearningProvider[];
+            var actualProviders = ((FormattedJsonResult) actual).Value as LearningProvider[];
             Assert.IsNotNull(actualProviders);
             Assert.AreSame(providers, actualProviders);
         }

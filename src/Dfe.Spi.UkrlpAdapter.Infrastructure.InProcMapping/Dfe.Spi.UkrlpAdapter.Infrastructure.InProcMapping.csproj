@@ -10,7 +10,7 @@
 
     <ItemGroup>
       <PackageReference Include="Dfe.Spi.Common.WellKnownIdentifiers" Version="1.2.1" />
-      <PackageReference Include="Dfe.Spi.Models" Version="2.0.2" />
+      <PackageReference Include="Dfe.Spi.Models" Version="2.1.0" />
     </ItemGroup>
 
 </Project>

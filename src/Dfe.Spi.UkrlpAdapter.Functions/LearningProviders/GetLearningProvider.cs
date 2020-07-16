@@ -56,16 +56,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
                 }
 
                 _logger.Info($"{FunctionName} found learning provider with id {id}. Returning ok");
-                if (JsonConvert.DefaultSettings != null)
-                {
-                    return new JsonResult(
-                        learningProvider,
-                        JsonConvert.DefaultSettings());
-                }
-                else
-                {
-                    return new JsonResult(learningProvider);
-                }
+                return new FormattedJsonResult(learningProvider);
             }
             catch (ArgumentException ex)
             {

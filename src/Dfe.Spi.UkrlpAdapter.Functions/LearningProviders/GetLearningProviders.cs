@@ -60,22 +60,7 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
         {
             var providers = await _learningProviderManager.GetLearningProvidersAsync(request.Identifiers, request.Fields, request.Live, cancellationToken);
             
-            if (JsonConvert.DefaultSettings != null)
-            {
-                return new JsonResult(
-                    providers,
-                    JsonConvert.DefaultSettings())
-                {
-                    StatusCode = 200,
-                };
-            }
-            else
-            {
-                return new JsonResult(providers)
-                {
-                    StatusCode = 200,
-                };
-            }
+            return new FormattedJsonResult(providers);
         }
     }
 
