@@ -26,7 +26,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
                 .ReturnsAsync(GetValidResponse(123, "Test"));
 
             _messageBuilderMock = new Mock<IUkrlpSoapMessageBuilder>();
-            _messageBuilderMock.Setup(b => b.BuildMessageToGetSpecificUkprn(It.IsAny<long>()))
+            _messageBuilderMock.Setup(b => b.BuildMessageToGetSpecificUkprns(It.IsAny<long[]>(), It.IsAny<string>()))
                 .Returns("some-soap-xml-request");
 
             _configuration = new UkrlpApiConfiguration
@@ -43,13 +43,13 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
         {
             await _client.GetProviderAsync(ukprn, new CancellationToken());
 
-            _messageBuilderMock.Verify(b => b.BuildMessageToGetSpecificUkprn(ukprn));
+            _messageBuilderMock.Verify(b => b.BuildMessageToGetSpecificUkprns(new[]{ukprn}, "A"));
         }
 
         [Test, AutoData]
         public async Task ThenItShouldExecuteSoapRequestAgainstServer(long ukprn, string soapRequestMessage)
         {
-            _messageBuilderMock.Setup(b => b.BuildMessageToGetSpecificUkprn(It.IsAny<long>()))
+            _messageBuilderMock.Setup(b => b.BuildMessageToGetSpecificUkprns(It.IsAny<long[]>(), It.IsAny<string>()))
                 .Returns(soapRequestMessage);
 
             await _client.GetProviderAsync(ukprn, new CancellationToken());

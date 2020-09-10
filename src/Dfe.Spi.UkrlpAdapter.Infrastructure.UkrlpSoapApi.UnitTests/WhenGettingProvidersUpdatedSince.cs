@@ -33,7 +33,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
                 }));
 
             _messageBuilderMock = new Mock<IUkrlpSoapMessageBuilder>();
-            _messageBuilderMock.Setup(b => b.BuildMessageToGetUpdatesSince(It.IsAny<DateTime>()))
+            _messageBuilderMock.Setup(b => b.BuildMessageToGetUpdatesSince(It.IsAny<DateTime>(), It.IsAny<string>()))
                 .Returns("some-soap-xml-request");
 
             _configuration = new UkrlpApiConfiguration
@@ -50,13 +50,13 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
         {
             await _client.GetProvidersUpdatedSinceAsync(updatedSince, new CancellationToken());
 
-            _messageBuilderMock.Verify(b => b.BuildMessageToGetUpdatesSince(updatedSince));
+            _messageBuilderMock.Verify(b => b.BuildMessageToGetUpdatesSince(updatedSince, It.IsAny<string>()));
         }
 
         [Test, AutoData]
         public async Task ThenItShouldExecuteSoapRequestAgainstServer(DateTime updatedSince, string soapRequestMessage)
         {
-            _messageBuilderMock.Setup(b => b.BuildMessageToGetUpdatesSince(It.IsAny<DateTime>()))
+            _messageBuilderMock.Setup(b => b.BuildMessageToGetUpdatesSince(It.IsAny<DateTime>(), It.IsAny<string>()))
                 .Returns(soapRequestMessage);
 
             await _client.GetProvidersUpdatedSinceAsync(updatedSince, new CancellationToken());
@@ -74,8 +74,18 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
         [Test, AutoData]
         public async Task ThenItShouldReturnDeserializedProviders(DateTime updatedSince, ProviderTestData[] returnedProviders)
         {
+            var callCount = 0;
             _restClientMock.Setup(c => c.ExecuteTaskAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(GetValidResponse(returnedProviders));
+                .ReturnsAsync(()=>
+                {
+                    callCount++;
+                    if (callCount == 1)
+                    {
+                        return GetValidResponse(returnedProviders);
+                    }
+
+                    return GetEmptyResponse();
+                });
 
             var actual = await _client.GetProvidersUpdatedSinceAsync(updatedSince, new CancellationToken());
 
