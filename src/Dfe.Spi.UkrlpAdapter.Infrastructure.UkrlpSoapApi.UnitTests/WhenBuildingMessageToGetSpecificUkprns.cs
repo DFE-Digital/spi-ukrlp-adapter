@@ -5,11 +5,12 @@ using NUnit.Framework;
 
 namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
 {
-    public class WhenBuildingMessageToGetSpecificUkprn
+    public class WhenBuildingMessageToGetSpecificUkprns
     {
         private static readonly XNamespace soapNs = "http://schemas.xmlsoap.org/soap/envelope/";
         private static readonly XNamespace ukrlpNs = "http://ukrlp.co.uk.server.ws.v3";
 
+        private Fixture _fixture;
         private string _stakeholderId;
         private long _ukprn;
         private UkrlpSoapMessageBuilder _builder;
@@ -17,10 +18,10 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
         [SetUp]
         public void Arrange()
         {
-            var fixture = new Fixture();
+            _fixture = new Fixture();
 
-            _stakeholderId = fixture.Create<string>();
-            _ukprn = fixture.Create<long>();
+            _stakeholderId = _fixture.Create<string>();
+            _ukprn = _fixture.Create<long>();
 
             _builder = new UkrlpSoapMessageBuilder(_stakeholderId);
         }
@@ -28,7 +29,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
         [Test]
         public void ThenItShouldReturnSoapMesage()
         {
-            var actual = _builder.BuildMessageToGetSpecificUkprn(_ukprn);
+            var actual = _builder.BuildMessageToGetSpecificUkprns(new[]{_ukprn});
 
             var envelope = XElement.Parse(actual);
             Assert.AreEqual("Envelope", envelope.Name.LocalName);
@@ -44,7 +45,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
         [Test]
         public void ThenItShouldHaveAProviderQueryRequestInTheSoapBody()
         {
-            var actual = _builder.BuildMessageToGetSpecificUkprn(_ukprn);
+            var actual = _builder.BuildMessageToGetSpecificUkprns(new[]{_ukprn});
 
             var body = XElement.Parse(actual).GetElementByLocalName("Body");
             Assert.IsNotNull(body.Elements().SingleOrDefault(e =>
@@ -55,7 +56,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
         [Test]
         public void ThenItShouldHaveAQueryIdInRequest()
         {
-            var actual = _builder.BuildMessageToGetSpecificUkprn(_ukprn);
+            var actual = _builder.BuildMessageToGetSpecificUkprns(new[]{_ukprn});
 
             var request = XElement.Parse(actual).GetElementByLocalName("Body").GetElementByLocalName("ProviderQueryRequest");
             var queryId = request.GetElementByLocalName("QueryId");
@@ -65,7 +66,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
         [Test]
         public void ThenItShouldHaveAStakeholderIdInSelectionCriteria()
         {
-            var actual = _builder.BuildMessageToGetSpecificUkprn(_ukprn);
+            var actual = _builder.BuildMessageToGetSpecificUkprns(new[]{_ukprn});
 
             var selectionCriteria = XElement.Parse(actual)
                 .GetElementByLocalName("Body")
@@ -77,9 +78,12 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
         }
 
         [Test]
-        public void ThenItShouldHaveASelectionCriteriaForUkprn()
+        public void ThenItShouldHaveASelectionCriteriaForUkprns()
         {
-            var actual = _builder.BuildMessageToGetSpecificUkprn(_ukprn);
+            var ukprn1 = _fixture.Create<long>();
+            var ukprn2 = _fixture.Create<long>();
+            
+            var actual = _builder.BuildMessageToGetSpecificUkprns(new[]{ukprn1, ukprn2});
 
             var selectionCriteria = XElement.Parse(actual)
                 .GetElementByLocalName("Body")
@@ -89,9 +93,44 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
             var ukprnList = selectionCriteria.GetElementByLocalName("UnitedKingdomProviderReferenceNumberList");
             Assert.IsNotNull(ukprnList);
 
-            var ukprn = ukprnList.GetElementByLocalName("UnitedKingdomProviderReferenceNumber");
-            Assert.IsNotNull(ukprn);
-            Assert.AreEqual(_ukprn.ToString(), ukprn.Value);
+            var ukprns = ukprnList.GetElementsByLocalName("UnitedKingdomProviderReferenceNumber");
+            Assert.IsNotNull(ukprns);
+            Assert.AreEqual(2, ukprns.Length);
+            Assert.AreEqual(ukprn1.ToString(), ukprns[0].Value);
+            Assert.AreEqual(ukprn2.ToString(), ukprns[1].Value);
+        }
+
+        [Test]
+        public void ThenItShouldHaveASelectionCriteriaForDefaultStatus()
+        {
+            var actual = _builder.BuildMessageToGetSpecificUkprns(new[]{_ukprn});
+
+            var selectionCriteria = XElement.Parse(actual)
+                .GetElementByLocalName("Body")
+                .GetElementByLocalName("ProviderQueryRequest")
+                .GetElementByLocalName("SelectionCriteria");
+
+            var status = selectionCriteria.GetElementByLocalName("ProviderStatus");
+            Assert.IsNotNull(status);
+            Assert.AreEqual("A", status.Value);
+        }
+
+        [TestCase("A")]
+        [TestCase("V")]
+        [TestCase("PD1")]
+        [TestCase("PD2")]
+        public void ThenItShouldHaveASelectionCriteriaForSpecifiedStatus(string providerStatus)
+        {
+            var actual = _builder.BuildMessageToGetSpecificUkprns(new[]{_ukprn}, providerStatus);
+
+            var selectionCriteria = XElement.Parse(actual)
+                .GetElementByLocalName("Body")
+                .GetElementByLocalName("ProviderQueryRequest")
+                .GetElementByLocalName("SelectionCriteria");
+
+            var status = selectionCriteria.GetElementByLocalName("ProviderStatus");
+            Assert.IsNotNull(status);
+            Assert.AreEqual(providerStatus, status.Value);
         }
     }
 }

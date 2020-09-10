@@ -30,32 +30,41 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
 
         public async Task<Provider> GetProviderAsync(long ukprn, CancellationToken cancellationToken)
         {
-            var message = _messageBuilder.BuildMessageToGetSpecificUkprn(ukprn);
-
-            var request = new RestRequest(Method.POST);
-            request.AddParameter("text/xml", message, ParameterType.RequestBody);
-            request.AddHeader("SOAPAction", "retrieveAllProviders");
-
-            var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
-            var result = EnsureSuccessResponseAndExtractResult(response);
-
-            var provider = MapProvidersFromSoapResult(result);
-            return provider.FirstOrDefault();
+            var providers = await GetProvidersAsync(new[] {ukprn}, cancellationToken);
+            return providers.FirstOrDefault();
         }
 
         public async Task<Provider[]> GetProvidersAsync(long[] ukprns, CancellationToken cancellationToken)
         {
-            var message = _messageBuilder.BuildMessageToGetSpecificUkprns(ukprns);
+            var orderedProviderStatuses = new[] {"A", "V", "PD1", "PD2"};
 
-            var request = new RestRequest(Method.POST);
-            request.AddParameter("text/xml", message, ParameterType.RequestBody);
-            request.AddHeader("SOAPAction", "retrieveAllProviders");
+            var providers = new List<Provider>();
+            var remainingUkprns = ukprns.ToList();
 
-            var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
-            var result = EnsureSuccessResponseAndExtractResult(response);
+            foreach (var providerStatus in orderedProviderStatuses)
+            {
+                var message = _messageBuilder.BuildMessageToGetSpecificUkprns(remainingUkprns.ToArray(), providerStatus);
 
-            var providers = MapProvidersFromSoapResult(result);
-            return providers;
+                var request = new RestRequest(Method.POST);
+                request.AddParameter("text/xml", message, ParameterType.RequestBody);
+                request.AddHeader("SOAPAction", "retrieveAllProviders");
+
+                var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
+                var result = EnsureSuccessResponseAndExtractResult(response);
+                
+                var providersForStatus = MapProvidersFromSoapResult(result);
+                foreach (var provider in providersForStatus)
+                {
+                    providers.Add(provider);
+                    remainingUkprns.Remove(provider.UnitedKingdomProviderReferenceNumber);
+                }
+                if (providers.Count == ukprns.Length)
+                {
+                    break;
+                }
+            }
+
+            return providers.ToArray();
         }
 
         public async Task<Provider[]> GetProvidersUpdatedSinceAsync(DateTime updatedSince, CancellationToken cancellationToken)

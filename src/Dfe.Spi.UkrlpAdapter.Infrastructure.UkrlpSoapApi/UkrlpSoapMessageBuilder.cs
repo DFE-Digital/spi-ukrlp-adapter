@@ -6,8 +6,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
 {
     internal interface IUkrlpSoapMessageBuilder
     {
-        string BuildMessageToGetSpecificUkprn(long ukprn);
-        string BuildMessageToGetSpecificUkprns(long[] ukprns);
+        string BuildMessageToGetSpecificUkprns(long[] ukprns, string statusCode = "A");
         string BuildMessageToGetUpdatesSince(DateTime updatedSince);
     }
 
@@ -25,19 +24,14 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
             _queryId = 1;
         }
 
-        public string BuildMessageToGetSpecificUkprn(long ukprn)
-        {
-            return BuildMessageToGetSpecificUkprns(new[] {ukprn});
-        }
-
-        public string BuildMessageToGetSpecificUkprns(long[] ukprns)
+        public string BuildMessageToGetSpecificUkprns(long[] ukprns, string statusCode = "A")
         {
             var selectionCriteria = new XElement("SelectionCriteria",
                 new XElement("UnitedKingdomProviderReferenceNumberList",
                     ukprns.Select(ukprn => new XElement("UnitedKingdomProviderReferenceNumber", ukprn))),
                 new XElement("CriteriaCondition", "OR"),
                 new XElement("ApprovedProvidersOnly", "No"),
-                new XElement("ProviderStatus", "A"));
+                new XElement("ProviderStatus", statusCode));
 
             var envelope = BuildEnvelope(selectionCriteria);
             return envelope.ToString();
