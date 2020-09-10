@@ -12,6 +12,8 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
 {
     public class UkrlpSoapApiClient : IUkrlpApiClient
     {
+        private static readonly string[] OrderedProviderStatuses = new[] {"A", "PD1", "V", "PD2"};
+        
         private readonly IRestClient _restClient;
         private readonly IUkrlpSoapMessageBuilder _messageBuilder;
 
@@ -36,12 +38,10 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
 
         public async Task<Provider[]> GetProvidersAsync(long[] ukprns, CancellationToken cancellationToken)
         {
-            var orderedProviderStatuses = new[] {"A", "V", "PD1", "PD2"};
-
             var providers = new List<Provider>();
             var remainingUkprns = ukprns.ToList();
 
-            foreach (var providerStatus in orderedProviderStatuses)
+            foreach (var providerStatus in OrderedProviderStatuses)
             {
                 var message = _messageBuilder.BuildMessageToGetSpecificUkprns(remainingUkprns.ToArray(), providerStatus);
 
@@ -69,7 +69,22 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
 
         public async Task<Provider[]> GetProvidersUpdatedSinceAsync(DateTime updatedSince, CancellationToken cancellationToken)
         {
-            var message = _messageBuilder.BuildMessageToGetUpdatesSince(updatedSince);
+            var providers = new List<Provider>();
+
+            foreach (var status in OrderedProviderStatuses)
+            {
+                var providersOfStatus = await GetProvidersOfStatusUpdatedSinceAsync(updatedSince, status, cancellationToken);
+                providers.AddRange(providersOfStatus);
+            }
+
+            return providers.ToArray();
+        }
+
+
+
+        private async Task<Provider[]> GetProvidersOfStatusUpdatedSinceAsync(DateTime updatedSince, string status, CancellationToken cancellationToken)
+        {
+            var message = _messageBuilder.BuildMessageToGetUpdatesSince(updatedSince, status);
 
             var request = new RestRequest(Method.POST);
             request.AddParameter("text/xml", message, ParameterType.RequestBody);
@@ -80,9 +95,6 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
 
             return MapProvidersFromSoapResult(result);
         }
-
-        
-        
         private static XElement EnsureSuccessResponseAndExtractResult(IRestResponse response)
         {
             XDocument document;

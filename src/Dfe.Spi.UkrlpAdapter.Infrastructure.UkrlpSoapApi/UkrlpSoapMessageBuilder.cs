@@ -7,7 +7,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
     internal interface IUkrlpSoapMessageBuilder
     {
         string BuildMessageToGetSpecificUkprns(long[] ukprns, string statusCode = "A");
-        string BuildMessageToGetUpdatesSince(DateTime updatedSince);
+        string BuildMessageToGetUpdatesSince(DateTime updatedSince, string statusCode = "A");
     }
 
     internal class UkrlpSoapMessageBuilder : IUkrlpSoapMessageBuilder
@@ -37,13 +37,13 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
             return envelope.ToString();
         }
 
-        public string BuildMessageToGetUpdatesSince(DateTime updatedSince)
+        public string BuildMessageToGetUpdatesSince(DateTime updatedSince, string statusCode = "A")
         {
             var selectionCriteria = new XElement("SelectionCriteria",
                 new XElement("ProviderUpdatedSince", updatedSince.ToUniversalTime().ToString("O")),
                 new XElement("CriteriaCondition", "OR"),
                 new XElement("ApprovedProvidersOnly", "No"),
-                new XElement("ProviderStatus", "A"));
+                new XElement("ProviderStatus", statusCode));
 
             var envelope = BuildEnvelope(selectionCriteria);
             return envelope.ToString();
