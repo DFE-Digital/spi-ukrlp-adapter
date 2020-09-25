@@ -147,32 +147,14 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
 
         public async Task<Provider[]> GetProvidersAsync(long[] ukprns, CancellationToken cancellationToken)
         {
-            var ukprnFilters = ukprns
-                .Select(ukprn => $"PartitionKey eq '{ukprn}'")
-                .Aggregate((x, y) => $"{x} or {y}");
-            var filter = $"RowKey eq 'current' and ({ukprnFilters})";
-            var query = new TableQuery<ProviderEntity>()
-                .Where(filter);
-            return await QueryAsync(query, cancellationToken);
+            return await GetProvidersAsync(ukprns, null, cancellationToken);
         }
 
         public async Task<Provider[]> GetProvidersAsync(long[] ukprns, DateTime? pointInTime, CancellationToken cancellationToken)
         {
-            var ukprnFilters = ukprns
-                .Select(ukprn => $"PartitionKey eq '{ukprn}'")
-                .Aggregate((x, y) => $"{x} or {y}");
-            var timeFilter = pointInTime.HasValue
-                ? $"RowKey le '{pointInTime.Value:yyyyMMdd}'"
-                : "RowKey eq 'current'";
-            var filter = $"{timeFilter} and ({ukprnFilters})";
-            var query = new TableQuery<ProviderEntity>()
-                .Where(filter);
-            var results = await QueryAsync(query, cancellationToken);
-
-            return results
-                .GroupBy(p => p.UnitedKingdomProviderReferenceNumber)
-                .Select(g => (Provider)g.OrderByDescending(p => p.PointInTime).First())
-                .ToArray();
+            var tasks = ukprns.Select(ukprn => GetProviderAsync(ukprn, pointInTime, cancellationToken));
+            var providers = await Task.WhenAll(tasks);
+            return providers;
         }
 
         public async Task<Provider[]> GetProvidersAsync(CancellationToken cancellationToken)
