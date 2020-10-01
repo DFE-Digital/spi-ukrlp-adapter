@@ -128,7 +128,10 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
                 .Take(1);
             var results = await QueryAsync(query, cancellationToken);
 
-            return results.SingleOrDefault();
+            // Could be more than 1 result if used a point in time. Take the most recent
+            return results
+                .OrderByDescending(x => x.PointInTime)
+                .FirstOrDefault();
         }
 
         public async Task<PointInTimeProvider> GetProviderFromStagingAsync(long ukprn, DateTime pointInTime, CancellationToken cancellationToken)
