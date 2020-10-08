@@ -23,16 +23,18 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
         private const string FunctionName = nameof(GetLearningProviders);
 
         private readonly ILearningProviderManager _learningProviderManager;
+        private readonly ILoggerWrapper _logger;
 
         public GetLearningProviders(
-            ILearningProviderManager learningProviderManager, 
-            IHttpSpiExecutionContextManager httpSpiExecutionContextManager, 
+            ILearningProviderManager learningProviderManager,
+            IHttpSpiExecutionContextManager httpSpiExecutionContextManager,
             ILoggerWrapper logger)
             : base(httpSpiExecutionContextManager, logger)
         {
             _learningProviderManager = learningProviderManager;
+            _logger = logger;
         }
-        
+
         [FunctionName(FunctionName)]
         public async Task<IActionResult> RunAsync(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "learning-providers")]
@@ -58,9 +60,25 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.LearningProviders
         protected override async Task<IActionResult> ProcessWellFormedRequestAsync(GetLearningProvidersRequest request, FunctionRunContext runContext,
             CancellationToken cancellationToken)
         {
-            var providers = await _learningProviderManager.GetLearningProvidersAsync(request.Identifiers, request.Fields, request.Live, request.PointInTime, cancellationToken);
-            
-            return new FormattedJsonResult(providers);
+            try
+            {
+                var providers = await _learningProviderManager.GetLearningProvidersAsync(request.Identifiers, request.Fields, request.Live, request.PointInTime,
+                    cancellationToken);
+
+                return new FormattedJsonResult(providers);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.Info($"{FunctionName} returning bad request: {ex.Message}");
+
+                return new HttpErrorBodyResult(
+                    new HttpErrorBody
+                    {
+                        StatusCode = HttpStatusCode.BadRequest,
+                        ErrorIdentifier = "SPI-UKRLP-PROV01",
+                        Message = ex.Message
+                    });
+            }
         }
     }
 
