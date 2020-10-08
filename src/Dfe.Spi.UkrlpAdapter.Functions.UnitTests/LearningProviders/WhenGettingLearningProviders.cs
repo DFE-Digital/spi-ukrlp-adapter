@@ -96,9 +96,9 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
             
             Assert.IsNotNull(actual);
             Assert.IsInstanceOf<HttpErrorBodyResult>(actual);
-            Assert.AreEqual(400, ((HttpErrorBodyResult) actual).StatusCode);
+            Assert.AreEqual(HttpStatusCode.BadRequest, ((HttpErrorBodyResult) actual).StatusCode);
 
-            var errorBody = (HttpErrorBody)((JsonResult) actual).Value;
+            var errorBody = (HttpErrorBody)((FormattedJsonResult) actual).Value;
             Assert.AreEqual(HttpStatusCode.BadRequest, errorBody.StatusCode);
             Assert.AreEqual(Errors.GetLearningProvidersMalformedRequest.Code, errorBody.ErrorIdentifier);
             Assert.AreEqual(Errors.GetLearningProvidersMalformedRequest.Message, errorBody.Message);
@@ -115,9 +115,9 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
             
             Assert.IsNotNull(actual);
             Assert.IsInstanceOf<HttpSchemaValidationErrorBodyResult>(actual);
-            Assert.AreEqual(400, ((HttpSchemaValidationErrorBodyResult) actual).StatusCode);
+            Assert.AreEqual(HttpStatusCode.BadRequest, ((HttpSchemaValidationErrorBodyResult) actual).StatusCode);
 
-            var errorBody = (HttpDetailedErrorBody)((JsonResult) actual).Value;
+            var errorBody = (HttpDetailedErrorBody)((FormattedJsonResult) actual).Value;
             Assert.AreEqual(HttpStatusCode.BadRequest, errorBody.StatusCode);
             Assert.AreEqual(Errors.GetLearningProvidersSchemaValidation.Code, errorBody.ErrorIdentifier);
             Assert.IsNotNull(errorBody.Details);
@@ -133,9 +133,9 @@ namespace Dfe.Spi.UkrlpAdapter.Functions.UnitTests.LearningProviders
             
             Assert.IsNotNull(actual);
             Assert.IsInstanceOf<HttpSchemaValidationErrorBodyResult>(actual);
-            Assert.AreEqual(400, ((HttpSchemaValidationErrorBodyResult) actual).StatusCode);
+            Assert.AreEqual(HttpStatusCode.BadRequest, ((HttpSchemaValidationErrorBodyResult) actual).StatusCode);
 
-            var errorBody = (HttpDetailedErrorBody)((JsonResult) actual).Value;
+            var errorBody = (HttpDetailedErrorBody)((FormattedJsonResult) actual).Value;
             Assert.AreEqual(HttpStatusCode.BadRequest, errorBody.StatusCode);
             Assert.AreEqual(Errors.GetLearningProvidersSchemaValidation.Code, errorBody.ErrorIdentifier);
             Assert.IsNotNull(errorBody.Details);
