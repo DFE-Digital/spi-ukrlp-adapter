@@ -157,7 +157,9 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
         {
             var tasks = ukprns.Select(ukprn => GetProviderAsync(ukprn, pointInTime, cancellationToken));
             var providers = await Task.WhenAll(tasks);
-            return providers;
+            return providers
+                .Where(p => p != null)
+                .ToArray();
         }
 
         public async Task<Provider[]> GetProvidersAsync(CancellationToken cancellationToken)
