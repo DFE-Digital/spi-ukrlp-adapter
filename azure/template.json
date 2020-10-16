@@ -209,6 +209,10 @@
               "value": "status"
             },
             {
+              "name": "SPI_Cache__NumberOfConcurrentThreadsToCachePerRequest",
+              "value": "20"
+            },
+            {
               "name": "SPI_Middleware__BaseUrl",
               "value": "[parameters('middlewareUrl')]"
             },
