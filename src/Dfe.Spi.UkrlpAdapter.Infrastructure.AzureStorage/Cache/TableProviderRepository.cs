@@ -163,7 +163,9 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
         public async Task<Provider[]> GetProvidersAsync(long[] ukprns, DateTime? pointInTime, CancellationToken cancellationToken)
         {
             var itemsPerThread = (int) Math.Ceiling(ukprns.Length / (float) _concurrentBatchReadThreads);
-            var numberOfThreads = (int) Math.Ceiling(ukprns.Length / (float) itemsPerThread);
+            var numberOfThreads = ukprns.Length > _concurrentBatchReadThreads
+                ? _concurrentBatchReadThreads
+                : ukprns.Length;
             var threads = new Task<PointInTimeProvider[]>[numberOfThreads];
             
             _logger.Debug($"Reading {ukprns.Length} UKPRNS with {numberOfThreads} (Max configured number of threads is {_concurrentBatchReadThreads})");
