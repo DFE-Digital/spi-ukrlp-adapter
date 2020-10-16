@@ -7,5 +7,7 @@ namespace Dfe.Spi.UkrlpAdapter.Domain.Configuration
         public string StateTableName { get; set; }
         
         public string ProviderProcessingQueueConnectionString { get; set; }
+        
+        public int NumberOfConcurrentThreadsToCachePerRequest { get; set; }
     }
 }
