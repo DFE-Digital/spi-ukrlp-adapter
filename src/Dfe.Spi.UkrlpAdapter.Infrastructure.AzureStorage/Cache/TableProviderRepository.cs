@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
@@ -16,6 +17,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
     {
         private readonly ILoggerWrapper _logger;
         private readonly CloudTable _table;
+        private readonly int _concurrentBatchReadThreads;
 
         public TableProviderRepository(CacheConfiguration configuration, ILoggerWrapper logger)
         {
@@ -24,6 +26,8 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
             var storageAccount = CloudStorageAccount.Parse(configuration.TableStorageConnectionString);
             var tableClient = storageAccount.CreateCloudTableClient();
             _table = tableClient.GetTableReference(configuration.ProviderTableName);
+
+            _concurrentBatchReadThreads = 10;
         }
 
         public async Task StoreAsync(PointInTimeProvider provider, CancellationToken cancellationToken)
@@ -155,10 +159,23 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
 
         public async Task<Provider[]> GetProvidersAsync(long[] ukprns, DateTime? pointInTime, CancellationToken cancellationToken)
         {
-            var tasks = ukprns.Select(ukprn => GetProviderAsync(ukprn, pointInTime, cancellationToken));
-            var providers = await Task.WhenAll(tasks);
+            var itemsPerThread = (int) Math.Ceiling(ukprns.Length / (float) _concurrentBatchReadThreads);
+            var numberOfThreads = (int) Math.Ceiling(ukprns.Length / (float) itemsPerThread);
+            var threads = new Task<PointInTimeProvider[]>[numberOfThreads];
+
+            for (var i = 0; i < threads.Length; i++)
+            {
+                var batchOfUkprns = ukprns
+                    .Skip(i * itemsPerThread)
+                    .Take(itemsPerThread)
+                    .ToArray();
+                threads[i] = GetBatchOfProvidersAsync(batchOfUkprns, pointInTime, cancellationToken);
+            }
+            
+            var providers = await Task.WhenAll(threads);
             return providers
-                .Where(p => p != null)
+                .SelectMany(x => x)
+                .Where(x => x != null)
                 .ToArray();
         }
 
@@ -202,6 +219,17 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
             return $"staging{pointInTime:yyyyMMdd}";
         }
 
+        private async Task<PointInTimeProvider[]> GetBatchOfProvidersAsync(long[] batchOfUkprns, DateTime? pointInTime, CancellationToken cancellationToken)
+        {
+            var providers = new PointInTimeProvider[batchOfUkprns.Length];
+
+            for (var i = 0; i < batchOfUkprns.Length; i++)
+            {
+                providers[i] = await GetProviderAsync(batchOfUkprns[i], pointInTime, cancellationToken);
+            }
+
+            return providers;
+        }
         private async Task<PointInTimeProvider> RetrieveAsync(string partitionKey, string rowKey, CancellationToken cancellationToken)
         {
             var operation = TableOperation.Retrieve<ProviderEntity>(partitionKey, rowKey);
