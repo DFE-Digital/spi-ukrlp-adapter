@@ -133,7 +133,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
                     TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.LessThanOrEqual, pointInTime.Value.ToString("yyyyMMdd"))))
                 .OrderByDesc("RowKey")
                 .Take(1);
-            var results = await QueryAsync(query, cancellationToken);
+            var results = await QueryProvidersAsync(query, cancellationToken);
 
             // Could be more than 1 result if used a point in time. Take the most recent
             return results
@@ -190,7 +190,33 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
         {
             var query = new TableQuery<ProviderEntity>()
                 .Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, "current"));
-            return await QueryAsync(query, cancellationToken);
+            return await QueryProvidersAsync(query, cancellationToken);
+        }
+
+        public async Task<int> ClearStagingDataForDateAsync(DateTime date, CancellationToken cancellationToken)
+        {
+            var partitionKey = GetStagingPartitionKey(date);
+            var query = new TableQuery<TableEntity>()
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey))
+                .Select(new[] {"PartitionKey", "RowKey"});
+            var rows = await QueryAsync(query, cancellationToken);
+
+            var index = 0;
+            while (index < rows.Length)
+            {
+                var batchOfRows = rows.Skip(index).Take(100).ToArray();
+                var batchOperation = new TableBatchOperation();
+
+                foreach (var row in batchOfRows)
+                {
+                    batchOperation.Delete(row);
+                }
+
+                await _table.ExecuteBatchAsync(batchOperation, cancellationToken);
+                index += batchOfRows.Length;
+            }
+
+            return rows.Length;
         }
 
 
@@ -252,26 +278,32 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
             return JsonConvert.DeserializeObject<PointInTimeProvider>(entity.ProviderJson);
         }
 
-        private async Task<PointInTimeProvider[]> QueryAsync(TableQuery<ProviderEntity> query, CancellationToken cancellationToken)
+        private async Task<PointInTimeProvider[]> QueryProvidersAsync(TableQuery<ProviderEntity> query, CancellationToken cancellationToken)
+        {
+            var results = await QueryAsync(query, cancellationToken);
+
+            return results
+                .Where(entity => !string.IsNullOrEmpty(entity.ProviderJson))
+                .Select(entity => JsonConvert.DeserializeObject<PointInTimeProvider>(entity.ProviderJson))
+                .ToArray();
+        }
+
+        private async Task<T[]> QueryAsync<T>(TableQuery<T> query, CancellationToken cancellationToken) where T : TableEntity, new()
         {
             var nextQuery = query;
             var continuationToken = default(TableContinuationToken);
-            var results = new List<ProviderEntity>();
+            var results = new List<T>();
 
             do
             {
-                var result =
-                    await _table.ExecuteQuerySegmentedAsync(nextQuery, continuationToken, cancellationToken);
+                var result = await _table.ExecuteQuerySegmentedAsync(nextQuery, continuationToken, cancellationToken);
 
                 results.AddRange(result.Results);
 
                 continuationToken = result.ContinuationToken;
             } while (continuationToken != null && !cancellationToken.IsCancellationRequested);
 
-            return results
-                .Where(entity => !string.IsNullOrEmpty(entity.ProviderJson))
-                .Select(entity => JsonConvert.DeserializeObject<PointInTimeProvider>(entity.ProviderJson))
-                .ToArray();
+            return results.ToArray();
         }
     }
 }

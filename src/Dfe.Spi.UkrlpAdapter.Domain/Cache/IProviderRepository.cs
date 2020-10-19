@@ -16,5 +16,7 @@ namespace Dfe.Spi.UkrlpAdapter.Domain.Cache
         Task<Provider[]> GetProvidersAsync(long[] ukprns, CancellationToken cancellationToken);
         Task<Provider[]> GetProvidersAsync(long[] ukprns, DateTime? pointInTime, CancellationToken cancellationToken);
         Task<Provider[]> GetProvidersAsync(CancellationToken cancellationToken);
+
+        Task<int> ClearStagingDataForDateAsync(DateTime date, CancellationToken cancellationToken);
     }
 }

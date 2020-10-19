@@ -9,5 +9,7 @@ namespace Dfe.Spi.UkrlpAdapter.Domain.Configuration
         public string ProviderProcessingQueueConnectionString { get; set; }
         
         public int NumberOfConcurrentThreadsToCachePerRequest { get; set; }
+        
+        public int NumberOfDaysToRetainStagingData { get; set; }
     }
 }
