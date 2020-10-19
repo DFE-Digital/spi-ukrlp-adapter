@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Models.Entities;
 using Dfe.Spi.UkrlpAdapter.Domain.Cache;
+using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
 using Dfe.Spi.UkrlpAdapter.Domain.Events;
 using Dfe.Spi.UkrlpAdapter.Domain.Mapping;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
@@ -15,6 +16,8 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
     {
         Task DownloadProvidersToCacheAsync(CancellationToken cancellationToken);
         Task ProcessBatchOfProviders(long[] ukprns, DateTime pointInTime, CancellationToken cancellationToken);
+
+        Task TidyCacheAsync(CancellationToken cancellationToken);
     }
 
     public class CacheManager : ICacheManager
@@ -25,6 +28,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
         private readonly IMapper _mapper;
         private readonly IEventPublisher _eventPublisher;
         private readonly IProviderProcessingQueue _providerProcessingQueue;
+        private readonly CacheConfiguration _configuration;
         private readonly ILoggerWrapper _logger;
 
         public CacheManager(
@@ -34,6 +38,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
             IMapper mapper,
             IEventPublisher eventPublisher,
             IProviderProcessingQueue providerProcessingQueue,
+            CacheConfiguration configuration,
             ILoggerWrapper logger)
         {
             _stateRepository = stateRepository;
@@ -42,6 +47,7 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
             _mapper = mapper;
             _eventPublisher = eventPublisher;
             _providerProcessingQueue = providerProcessingQueue;
+            _configuration = configuration;
             _logger = logger;
         }
 
@@ -119,6 +125,33 @@ namespace Dfe.Spi.UkrlpAdapter.Application.Cache
                     _logger.Info($"{ukprn} on {pointInTime} has not changed since {previous.PointInTime}. Skipping");
                 }
             }
+        }
+
+        public async Task TidyCacheAsync(CancellationToken cancellationToken)
+        {
+            var lastCleared = await _stateRepository.GetLastStagingDateClearedAsync(cancellationToken);
+            var retentionDate = DateTime.Today.AddDays(-_configuration.NumberOfDaysToRetainStagingData);
+            
+            _logger.Info($"Tidying cache staging data between {lastCleared} and {retentionDate}");
+
+            try
+            {
+                while (lastCleared < retentionDate)
+                {
+                    lastCleared = lastCleared.AddDays(1);
+
+                    var numberOfRowsDeleted = await _providerRepository.ClearStagingDataForDateAsync(lastCleared, cancellationToken);
+
+                    await _stateRepository.SetLastStagingDateClearedAsync(lastCleared, cancellationToken);
+                    _logger.Info($"Cleared {numberOfRowsDeleted} rows for {lastCleared}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Errored when clearing data for {lastCleared} - {ex.Message}", ex);
+            }
+            
+            _logger.Info($"Finished tidying cache staging data upto {lastCleared}");
         }
 
         private bool AreSame(Provider current, Provider staging)

@@ -24,28 +24,57 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.AzureStorage.Cache
 
         public async Task<DateTime> GetLastProviderReadTimeAsync(CancellationToken cancellationToken)
         {
+            return await GetLastDateTimeStateAsync("learning-provider", "last-read", DateTime.Now.Date.AddDays(-14), cancellationToken);
+        }
+
+        public async Task SetLastProviderReadTimeAsync(DateTime lastRead, CancellationToken cancellationToken)
+        {
+            await SetLastDateTimeStateAsync("learning-provider", "last-read", lastRead, cancellationToken);
+        }
+
+        public async Task<DateTime> GetLastStagingDateClearedAsync(CancellationToken cancellationToken)
+        {
+            return await GetLastDateTimeStateAsync("provider-staging", "last-cleared", new DateTime(2020, 6, 1), cancellationToken);
+        }
+
+        public async Task SetLastStagingDateClearedAsync(DateTime lastRead, CancellationToken cancellationToken)
+        {
+            await SetLastDateTimeStateAsync("provider-staging", "last-cleared", lastRead, cancellationToken);
+        }
+
+
+        private async Task<DateTime> GetLastDateTimeStateAsync(
+            string partitionKey,
+            string rowKey,
+            DateTime defaultValue,
+            CancellationToken cancellationToken)
+        {
             await _table.CreateIfNotExistsAsync(cancellationToken);
-            
-            var operation = TableOperation.Retrieve<LastReadEntity>("learning-provider", "last-read");
+
+            var operation = TableOperation.Retrieve<LastDateTimeEntity>(partitionKey, rowKey);
             var operationResult = await _table.ExecuteAsync(operation, cancellationToken);
-            var entity = (LastReadEntity) operationResult.Result;
+            var entity = (LastDateTimeEntity) operationResult.Result;
 
             if (entity == null)
             {
-                return DateTime.Now.Date.AddDays(-14);
+                return defaultValue;
             }
 
             return entity.LastRead;
         }
 
-        public async Task SetLastProviderReadTimeAsync(DateTime lastRead, CancellationToken cancellationToken)
+        private async Task SetLastDateTimeStateAsync(
+            string partitionKey,
+            string rowKey,
+            DateTime lastRead,
+            CancellationToken cancellationToken)
         {
             await _table.CreateIfNotExistsAsync(cancellationToken);
 
-            var operation = TableOperation.InsertOrReplace(new LastReadEntity
+            var operation = TableOperation.InsertOrReplace(new LastDateTimeEntity
             {
-                PartitionKey = "learning-provider",
-                RowKey = "last-read",
+                PartitionKey = partitionKey,
+                RowKey = rowKey,
                 LastRead = lastRead,
             });
             await _table.ExecuteAsync(operation, cancellationToken);

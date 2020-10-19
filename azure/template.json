@@ -213,6 +213,14 @@
               "value": "20"
             },
             {
+              "name": "SPI_Cache__TidyCacheSchedule",
+              "value": "0 0 22 * * *"
+            },
+            {
+              "name": "SPI_Cache__NumberOfDaysToRetainStagingData",
+              "value": "14"
+            },
+            {
               "name": "SPI_Middleware__BaseUrl",
               "value": "[parameters('middlewareUrl')]"
             },

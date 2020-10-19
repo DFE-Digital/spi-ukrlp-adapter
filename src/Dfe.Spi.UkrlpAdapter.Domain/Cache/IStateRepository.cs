@@ -8,5 +8,8 @@ namespace Dfe.Spi.UkrlpAdapter.Domain.Cache
     {
         Task<DateTime> GetLastProviderReadTimeAsync(CancellationToken cancellationToken);
         Task SetLastProviderReadTimeAsync(DateTime lastRead, CancellationToken cancellationToken);
+        
+        Task<DateTime> GetLastStagingDateClearedAsync(CancellationToken cancellationToken);
+        Task SetLastStagingDateClearedAsync(DateTime lastRead, CancellationToken cancellationToken);
     }
 }

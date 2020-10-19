@@ -7,6 +7,7 @@ using Dfe.Spi.Common.UnitTesting.Fixtures;
 using Dfe.Spi.Models.Entities;
 using Dfe.Spi.UkrlpAdapter.Application.Cache;
 using Dfe.Spi.UkrlpAdapter.Domain.Cache;
+using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
 using Dfe.Spi.UkrlpAdapter.Domain.Events;
 using Dfe.Spi.UkrlpAdapter.Domain.Mapping;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
@@ -23,6 +24,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
         private Mock<IMapper> _mapperMock;
         private Mock<IEventPublisher> _eventPublisherMock;
         private Mock<IProviderProcessingQueue> _providerProcessingQueueMock;
+        private CacheConfiguration _configuration;
         private Mock<ILoggerWrapper> _loggerMock;
         private CacheManager _manager;
         private CancellationToken _cancellationToken;
@@ -56,6 +58,8 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                     ProviderName = ukprn.ToString(),
                 });
 
+            _configuration = new CacheConfiguration();
+
             _loggerMock = new Mock<ILoggerWrapper>();
 
             _manager = new CacheManager(
@@ -65,6 +69,7 @@ namespace Dfe.Spi.GiasAdapter.Application.UnitTests.Cache
                 _mapperMock.Object,
                 _eventPublisherMock.Object,
                 _providerProcessingQueueMock.Object,
+                _configuration,
                 _loggerMock.Object);
 
             _cancellationToken = new CancellationToken();
