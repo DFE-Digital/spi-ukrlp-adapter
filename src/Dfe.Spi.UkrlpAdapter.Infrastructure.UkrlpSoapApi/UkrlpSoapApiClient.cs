@@ -12,7 +12,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
 {
     public class UkrlpSoapApiClient : IUkrlpApiClient
     {
-        private static readonly string[] OrderedProviderStatuses = new[] {"A", "PD1", "V", "PD2"};
+        private static readonly string[] OrderedProviderStatuses = new[] {"A", "PD1", "PD2"};
         
         private readonly IRestClient _restClient;
         private readonly IUkrlpSoapMessageBuilder _messageBuilder;
