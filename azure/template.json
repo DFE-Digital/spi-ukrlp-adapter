@@ -107,7 +107,7 @@
       "name": "[variables('storageAccountName')]",
       "apiVersion": "2019-04-01",
       "location": "[resourceGroup().location]",
-      "kind": "Storage",
+      "kind": "StorageV2",
       "sku": {
         "name": "Standard_LRS",
         "tier": "Standard"
