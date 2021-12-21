@@ -40,7 +40,8 @@ namespace SeedCacheFromListOfUkprns
                 {
                     Url = options.UkrlpUrl,
                     StakeholderId = options.UkrlpStakeholderId,
-                });
+                },
+                _logger);
 
             _httpSpiExecutionContextManager = new HttpSpiExecutionContextManager();
             _httpSpiExecutionContextManager.SetInternalRequestId(Guid.NewGuid());

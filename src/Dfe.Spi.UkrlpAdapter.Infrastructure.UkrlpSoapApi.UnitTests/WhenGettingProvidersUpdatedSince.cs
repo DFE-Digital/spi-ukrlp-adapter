@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using AutoFixture.NUnit3;
+using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
 using Moq;
 using NUnit.Framework;
@@ -16,6 +17,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
         private Mock<IRestClient> _restClientMock;
         private Mock<IUkrlpSoapMessageBuilder> _messageBuilderMock;
         private UkrlpApiConfiguration _configuration;
+        private Mock<ILoggerWrapper> _loggerMock;
         private UkrlpSoapApiClient _client;
 
         [SetUp]
@@ -42,7 +44,9 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi.UnitTests
                 StakeholderId = "123",
             };
 
-            _client = new UkrlpSoapApiClient(_restClientMock.Object, _messageBuilderMock.Object, _configuration);
+            _loggerMock = new Mock<ILoggerWrapper>();
+
+            _client = new UkrlpSoapApiClient(_restClientMock.Object, _messageBuilderMock.Object, _configuration, _loggerMock.Object);
         }
 
         [Test, AutoData]
