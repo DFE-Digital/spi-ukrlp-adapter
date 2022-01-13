@@ -14,6 +14,7 @@ using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
 using Dfe.Spi.UkrlpAdapter.Domain.Translation;
 using Newtonsoft.Json;
 using RestSharp;
+using RestSharp.Authenticators;
 
 namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
 {
@@ -22,7 +23,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
         private readonly IRestClient _restClient;
         private readonly ICacheProvider _cacheProvider;
         private readonly ILoggerWrapper _logger;
-        private readonly OAuth2ClientCredentialsAuthenticator _oAuth2ClientCredentialsAuthenticator;
+        private readonly TestOAuth2ClientCredentialsAuthenticator _oAuth2ClientCredentialsAuthenticator;
         private readonly ISpiExecutionContextManager _spiExecutionContextManager;
 
         public TranslatorApiClient(
@@ -45,11 +46,12 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
             
             _logger = logger;
 
-            _oAuth2ClientCredentialsAuthenticator = new OAuth2ClientCredentialsAuthenticator(
+            _oAuth2ClientCredentialsAuthenticator = new TestOAuth2ClientCredentialsAuthenticator(
                 authenticationConfiguration.TokenEndpoint,
                 authenticationConfiguration.ClientId,
                 authenticationConfiguration.ClientSecret,
-                authenticationConfiguration.Resource);
+                authenticationConfiguration.Resource,
+                logger);
 
             _spiExecutionContextManager = spiExecutionContextManager;
         }
@@ -178,5 +180,96 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
     internal class TranslationMappingsResult
     {
         public Dictionary<string, string[]> Mappings { get; set; }
+    }
+
+    //
+    // Summary:
+    //     OAuth 2 authenticator using client credentials.
+    public class TestOAuth2ClientCredentialsAuthenticator : IAuthenticator
+    {
+        //
+        // Summary:
+        //     Represents the JSON content returned by an OAuth token request.
+        private class OAuthTokenResult
+        {
+            //
+            // Summary:
+            //     Gets or sets the access_token.
+            [JsonProperty("access_token")]
+            public string AccessToken
+            {
+                get;
+                set;
+            }
+        }
+
+        private readonly string tokenEndpoint;
+
+        private readonly string clientId;
+
+        private readonly string clientSecret;
+
+        private readonly string resource;
+
+        private readonly ILoggerWrapper logger;
+
+        //
+        // Summary:
+        //     Initialises a new instance of the Dfe.Spi.Common.Http.Client.OAuth2ClientCredentialsAuthenticator
+        //     class.
+        //
+        // Parameters:
+        //   tokenEndpoint:
+        //     Full url used to get token.
+        //
+        //   clientId:
+        //     Client id to use to authenticate.
+        //
+        //   clientSecret:
+        //     Client secret to use to authenticate.
+        //
+        //   resource:
+        //     The resource to authenticate for.
+        public TestOAuth2ClientCredentialsAuthenticator(string tokenEndpoint, string clientId, string clientSecret, string resource, ILoggerWrapper logger)
+        {
+            this.tokenEndpoint = tokenEndpoint;
+            this.clientId = clientId;
+            this.clientSecret = clientSecret;
+            this.resource = resource;
+            this.logger = logger;
+        }
+
+        public void Authenticate(IRestClient client, IRestRequest request)
+        {
+            if (request == null)
+            {
+                throw new ArgumentNullException("request");
+            }
+
+            string token = GetToken();
+            request.AddParameter("Authorization", "Bearer " + token, ParameterType.HttpHeader);
+        }
+
+        private string GetToken()
+        {
+            RestClient restClient = new RestClient();
+            RestRequest restRequest = new RestRequest(tokenEndpoint, Method.POST);
+            restRequest.AddParameter("grant_type", "client_credentials", ParameterType.GetOrPost);
+            restRequest.AddParameter("client_id", clientId, ParameterType.GetOrPost);
+            restRequest.AddParameter("client_secret", clientSecret, ParameterType.GetOrPost);
+            restRequest.AddParameter("resource", resource, ParameterType.GetOrPost);
+            IRestResponse restResponse = restClient.Execute(restRequest);
+            if (!restResponse.IsSuccessful)
+            {
+                if (restResponse.ErrorException != null)
+                    logger.Warning($"Problem fetching oAuth Token with exception message: {restResponse.ErrorException.Message}");
+
+                logger.Warning($"Headers: {string.Join(", ", restResponse.Headers.Select(x => $"{x.Name}:{x.Value}"))}");
+                logger.Warning($"form params: {clientId} : {clientSecret?.Substring(0,4)} : {resource} : {tokenEndpoint}");
+                throw new OAuth2ClientCredentialsException(restResponse.StatusCode, restResponse.Content);
+            }
+
+            return JsonConvert.DeserializeObject<OAuthTokenResult>(restResponse.Content).AccessToken;
+        }
     }
 }
