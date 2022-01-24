@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
 using Dfe.Spi.UkrlpAdapter.Domain.UkrlpApi;
 using RestSharp;
@@ -16,17 +17,19 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
         
         private readonly IRestClient _restClient;
         private readonly IUkrlpSoapMessageBuilder _messageBuilder;
+        private readonly ILoggerWrapper _logger;
 
         internal UkrlpSoapApiClient(IRestClient restClient, IUkrlpSoapMessageBuilder messageBuilder,
-            UkrlpApiConfiguration configuration)
+            UkrlpApiConfiguration configuration, ILoggerWrapper logger)
         {
             _restClient = restClient;
             _restClient.BaseUrl = new Uri(configuration.Url, UriKind.Absolute);
             _messageBuilder = messageBuilder;
+            _logger = logger;
         }
 
-        public UkrlpSoapApiClient(IRestClient restClient, UkrlpApiConfiguration configuration)
-            : this(restClient, new UkrlpSoapMessageBuilder(configuration.StakeholderId), configuration)
+        public UkrlpSoapApiClient(IRestClient restClient, UkrlpApiConfiguration configuration, ILoggerWrapper logger)
+            : this(restClient, new UkrlpSoapMessageBuilder(configuration.StakeholderId), configuration, logger)
         {
         }
 
@@ -50,7 +53,7 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
                 request.AddHeader("SOAPAction", "retrieveAllProviders");
 
                 var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
-                var result = EnsureSuccessResponseAndExtractResult(response);
+                var result = EnsureSuccessResponseAndExtractResult(response, message);
                 
                 var providersForStatus = MapProvidersFromSoapResult(result);
                 foreach (var provider in providersForStatus)
@@ -80,8 +83,6 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
             return providers.ToArray();
         }
 
-
-
         private async Task<Provider[]> GetProvidersOfStatusUpdatedSinceAsync(DateTime updatedSince, string status, CancellationToken cancellationToken)
         {
             var message = _messageBuilder.BuildMessageToGetUpdatesSince(updatedSince, status);
@@ -90,21 +91,28 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.UkrlpSoapApi
             request.AddParameter("text/xml", message, ParameterType.RequestBody);
             request.AddHeader("SOAPAction", "retrieveAllProviders");
 
+            _logger.Info($"Fetching providers with body:{message}");
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
-            var result = EnsureSuccessResponseAndExtractResult(response);
-
+            var result = EnsureSuccessResponseAndExtractResult(response, message);
             return MapProvidersFromSoapResult(result);
         }
-        private static XElement EnsureSuccessResponseAndExtractResult(IRestResponse response)
+        private static XElement EnsureSuccessResponseAndExtractResult(IRestResponse response, string message)
         {
+            if (!response.IsSuccessful && response.ErrorException != null)
+                throw new UkrlpSoapApiException(
+                    $"Error calling UKrlp endpoint: {response.ErrorMessage??"N/A"}({response.StatusCode}) with request body: {message} and response: {response.Content}"
+                    , response.ErrorException);
+
             XDocument document;
             try
-            {
+            {                
                 document = XDocument.Parse(response.Content);
             }
             catch (Exception ex)
             {
-                throw new UkrlpSoapApiException($"Error deserializing SOAP response: {ex.Message} (response: {response.Content})", ex);
+                throw new UkrlpSoapApiException(
+                    $"Error deserializing SOAP response: {ex.Message} (response: request {message} and response: {response.Content} :: response:statusCode:{response.StatusCode} response:errorMessage:{response.ErrorMessage})"
+                    ,ex);
             }
             
             var envelope = document.Elements().Single();
