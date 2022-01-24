@@ -9,7 +9,7 @@
     "learning-provider-created": {
       "description": "New learning provider has been detected",
       "schema": {
-        "$ref": "#/definitions/learning-provider"
+        "$ref": "#/definitions/learning-provider-event"
       }
     },
     "learning-provider-updated": {
