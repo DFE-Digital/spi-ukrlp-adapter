@@ -12,6 +12,7 @@ using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
 using Dfe.Spi.UkrlpAdapter.Domain.Translation;
+using Meridian.MeaningfulToString;
 using Newtonsoft.Json;
 using RestSharp;
 
@@ -146,7 +147,15 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
                     $"calling the Translator.");
             }
 
+            // temporary logs
+            _logger.Debug($"endpoint: {_restClient.BaseUrl}");
+
+
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
+
+            _logger.Debug($"translator is called... {response.StatusCode}");
+
+
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 return null;
