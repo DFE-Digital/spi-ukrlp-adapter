@@ -53,6 +53,9 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
                 authenticationConfiguration.Resource);
 
             _spiExecutionContextManager = spiExecutionContextManager;
+
+            System.Net.ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };
+            System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         }
 
         public async Task<string> TranslateEnumValue(string enumName, string sourceValue,
