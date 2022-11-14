@@ -154,6 +154,9 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
 
             _logger.Debug($"translator is called... {response.StatusCode}");
+            _logger.Debug($"translator is called... {response.Content}");
+            _logger.Debug($"translator is called... {response.ErrorException}");
+            _logger.Debug($"translator is called... {response.ErrorMessage}");
 
 
             if (response.StatusCode == HttpStatusCode.NotFound)
