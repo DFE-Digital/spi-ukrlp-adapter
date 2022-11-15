@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Caching.Definitions;
@@ -150,6 +151,20 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
                     $"calling the Translator.");
             }
 
+            try
+            {
+
+   
+            // test and debug only
+            using var client = new HttpClient();
+            _logger.Debug($"HttpClient request started...");
+            var result = await client.GetAsync($"{_restClient.BaseUrl}adapters/UKRLP/mappings");
+            _logger.Debug($"HttpClient request... Status: {result.StatusCode}");
+            }
+            catch (Exception e)
+            {
+                _logger.Debug($"HttpClient exception... {e}");
+            }
             // temporary logs
             _logger.Debug($"endpoint: {_restClient.BaseUrl}");
 
