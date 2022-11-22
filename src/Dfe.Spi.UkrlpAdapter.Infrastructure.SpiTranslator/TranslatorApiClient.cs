@@ -151,31 +151,8 @@ namespace Dfe.Spi.UkrlpAdapter.Infrastructure.SpiTranslator
                     $"calling the Translator.");
             }
 
-            try
-            {
-
-   
-            // test and debug only
-            using var client = new HttpClient();
-            _logger.Debug($"HttpClient request started...");
-            var result = await client.GetAsync($"{_restClient.BaseUrl}adapters/UKRLP/mappings");
-            _logger.Debug($"HttpClient request... Status: {result.StatusCode}");
-            }
-            catch (Exception e)
-            {
-                _logger.Debug($"HttpClient exception... {e}");
-            }
-            // temporary logs
-            _logger.Debug($"endpoint: {_restClient.BaseUrl}");
-
 
             var response = await _restClient.ExecuteTaskAsync(request, cancellationToken);
-
-            _logger.Debug($"translator is called... {response.StatusCode}");
-            _logger.Debug($"translator is called... {response.Content}");
-            _logger.Debug($"translator is called... {response.ErrorException}");
-            _logger.Debug($"translator is called... {response.ErrorMessage}");
-
 
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
