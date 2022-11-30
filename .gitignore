@@ -356,3 +356,7 @@ MigrationBackup/
 
 # Mac OS
 .DS_Store
+
+# Settings
+local.settings.json
+launchSettings.json
