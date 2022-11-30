@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Dfe.Spi.Common.Caching.Definitions;
@@ -13,7 +12,6 @@ using Dfe.Spi.Common.Logging.Definitions;
 using Dfe.Spi.Common.WellKnownIdentifiers;
 using Dfe.Spi.UkrlpAdapter.Domain.Configuration;
 using Dfe.Spi.UkrlpAdapter.Domain.Translation;
-using Meridian.MeaningfulToString;
 using Newtonsoft.Json;
 using RestSharp;
 
